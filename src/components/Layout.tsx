@@ -4,8 +4,6 @@ import Header from './Header';
 import Footer from './Footer';
 import { motion } from 'framer-motion';
 
-<lov-add-dependency>framer-motion@latest</lov-add-dependency>
-
 interface LayoutProps {
   children: React.ReactNode;
 }
