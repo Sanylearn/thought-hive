@@ -1,40 +1,35 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, signIn } = useAuth();
+  
+  useEffect(() => {
+    // If user is already logged in, redirect to admin dashboard
+    if (user) {
+      navigate('/admin');
+    }
+  }, [user, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // This is a mock authentication
-    // In a real app, you would connect to Supabase or another authentication service
-    setTimeout(() => {
-      if (email === 'admin@example.com' && password === 'password') {
-        // Successfully logged in
-        localStorage.setItem('isAuthenticated', 'true');
-        toast({
-          title: "Successfully logged in",
-          description: "Welcome to the admin dashboard",
-        });
-        navigate('/admin');
-      } else {
-        // Failed login
-        toast({
-          title: "Authentication failed",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
-      }
+    try {
+      await signIn(email, password);
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
   
   return (

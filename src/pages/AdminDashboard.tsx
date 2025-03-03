@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -12,22 +11,11 @@ import {
   Settings,
   Image
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    // Check if user is authenticated
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    if (!isAuthenticated) {
-      navigate('/admin/login');
-    }
-  }, [navigate]);
-  
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    navigate('/admin/login');
-  };
+  const { signOut, profile } = useAuth();
   
   // Mock data for recent posts
   const recentPosts = [
@@ -42,13 +30,20 @@ const AdminDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="font-serif font-bold text-lg">Opinion Matters Admin</div>
-            <button 
-              onClick={handleLogout}
-              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <LogOut size={18} className="mr-1" />
-              <span>Logout</span>
-            </button>
+            <div className="flex items-center gap-4">
+              {profile && (
+                <span className="text-sm text-gray-600">
+                  Welcome, {profile.full_name || profile.email}
+                </span>
+              )}
+              <button 
+                onClick={() => signOut()}
+                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <LogOut size={18} className="mr-1" />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
