@@ -5,12 +5,14 @@ import { motion } from 'framer-motion';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
   const { user, signIn } = useAuth();
   
@@ -24,12 +26,44 @@ const AdminLogin: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMsg('');
     
     try {
+      console.log(`Attempting to sign in with email: ${email}`);
+      
+      // First check if the email exists in the profiles table with admin role
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', email)
+        .eq('role', 'admin')
+        .single();
+      
+      if (profileError || !profiles) {
+        console.log('Profile check error or no profile found:', profileError);
+        setErrorMsg('No admin account found with this email. Please check your credentials.');
+        toast({
+          title: "Login Failed",
+          description: "No admin account found with this email.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('Admin profile found, attempting to sign in');
+      
+      // If profile exists with admin role, proceed with login
       await signIn(email, password);
       // Note: Navigation is handled in the signIn function in AuthContext
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (error: any) {
+      console.error('Login error details:', error);
+      setErrorMsg(error.message || 'An error occurred during login');
+      toast({
+        title: "Login Failed",
+        description: error.message || "Please check your credentials and try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -49,6 +83,12 @@ const AdminLogin: React.FC = () => {
       >
         <div className="px-6 py-8 md:px-8 md:py-10">
           <h2 className="text-2xl font-serif font-bold text-center mb-8 dark:text-white">Admin Login</h2>
+          
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-md text-sm">
+              {errorMsg}
+            </div>
+          )}
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
