@@ -98,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         navigate('/admin');
       }
     } catch (error: any) {
+      console.error('Login error details:', error);
       toast({
         title: "Login failed",
         description: error.message,
