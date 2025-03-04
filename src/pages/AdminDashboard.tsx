@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -53,7 +52,8 @@ const AdminDashboard: React.FC = () => {
     title: '',
     author: '',
     description: '',
-    cover_url: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&h=900' // Default cover
+    cover_url: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&h=900', // Default cover
+    download_url: '' // Add this field which is required by the schema
   });
   
   useEffect(() => {
@@ -163,7 +163,8 @@ const AdminDashboard: React.FC = () => {
           author: newBook.author,
           description: newBook.description,
           cover_url: newBook.cover_url,
-          added_by: user.id
+          download_url: newBook.download_url || '#', // Ensure download_url is provided
+          created_by: user.id // Change from 'added_by' to 'created_by' to match schema
         }])
         .select();
         
@@ -179,7 +180,8 @@ const AdminDashboard: React.FC = () => {
         title: '',
         author: '',
         description: '',
-        cover_url: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&h=900'
+        cover_url: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&h=900',
+        download_url: ''
       });
       
       setShowAddBookForm(false);
@@ -569,6 +571,21 @@ const AdminDashboard: React.FC = () => {
                     onChange={(e) => setNewBook({...newBook, cover_url: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                     placeholder="https://example.com/cover.jpg"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="downloadUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Download URL
+                  </label>
+                  <input
+                    id="downloadUrl"
+                    type="text"
+                    value={newBook.download_url}
+                    onChange={(e) => setNewBook({...newBook, download_url: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                    placeholder="https://example.com/book.pdf"
                     required
                   />
                 </div>
