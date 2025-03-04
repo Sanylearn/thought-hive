@@ -9,46 +9,62 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      books: {
+      blogs: {
         Row: {
-          added_by: string
-          author: string
-          cover_url: string | null
+          content: string
           created_at: string
-          description: string | null
+          created_by: string | null
           id: string
           title: string
-          updated_at: string
         }
         Insert: {
-          added_by: string
-          author: string
-          cover_url?: string | null
+          content: string
           created_at?: string
-          description?: string | null
+          created_by?: string | null
           id?: string
           title: string
-          updated_at?: string
         }
         Update: {
-          added_by?: string
-          author?: string
-          cover_url?: string | null
+          content?: string
           created_at?: string
-          description?: string | null
+          created_by?: string | null
           id?: string
           title?: string
-          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "books_added_by_fkey"
-            columns: ["added_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      books: {
+        Row: {
+          author: string
+          cover_url: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          download_url: string
+          id: string
+          title: string
+        }
+        Insert: {
+          author: string
+          cover_url: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          download_url: string
+          id?: string
+          title: string
+        }
+        Update: {
+          author?: string
+          cover_url?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          download_url?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
       }
       posts: {
         Row: {
