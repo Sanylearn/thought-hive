@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import FeaturedPost from '../components/FeaturedPost';
 import BlogCard from '../components/BlogCard';
@@ -7,66 +7,147 @@ import BookCard from '../components/BookCard';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { supabase } from '../integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
-// Mock data for the demo
-const featuredPost = {
-  id: '1',
-  title: 'The Future of Artificial Intelligence in Everyday Life',
-  excerpt: 'As AI continues to evolve, we examine its growing impact on our daily routines and what this means for society.',
-  date: 'May 15, 2023',
-  imageUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=1600&h=800',
-  category: 'Technology'
-};
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  image_url: string | null;
+  created_at: string;
+  category: string;
+  status: string;
+}
 
-const recentPosts = [
-  {
-    id: '2',
-    title: 'How Minimalism Changed My Perspective on Consumerism',
-    excerpt: 'A personal journey through adopting minimalist principles and how it transformed my relationship with material possessions.',
-    date: 'April 28, 2023',
-    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&h=600',
-    category: 'Lifestyle'
-  },
-  {
-    id: '3',
-    title: 'The Overlooked Benefits of Deep Reading in a Digital Age',
-    excerpt: 'In an era of short attention spans, the cognitive and emotional benefits of deep reading are more important than ever.',
-    date: 'April 15, 2023',
-    imageUrl: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=800&h=600',
-    category: 'Culture'
-  },
-  {
-    id: '4',
-    title: 'Why Privacy Should Be Your Primary Concern Online',
-    excerpt: 'With increasing data breaches and surveillance, protecting your digital footprint has never been more crucial.',
-    date: 'March 30, 2023',
-    imageUrl: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&h=600',
-    category: 'Privacy'
-  }
-];
-
-const recommendedBooks = [
-  {
-    id: '1',
-    title: 'Thinking, Fast and Slow',
-    author: 'Daniel Kahneman',
-    summary: 'Explores the two systems that drive how we think—System 1 is fast, intuitive, and emotional; System 2 is slower, more deliberative, and more logical.',
-    imageUrl: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&h=900'
-  },
-  {
-    id: '2',
-    title: 'Sapiens: A Brief History of Humankind',
-    author: 'Yuval Noah Harari',
-    summary: 'A sweeping narrative that explores the ways in which biology and history have defined us and enhanced our understanding of what it means to be "human."',
-    imageUrl: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&h=900'
-  }
-];
+interface Book {
+  id: string;
+  title: string;
+  author: string;
+  description: string | null;
+  cover_url: string;
+}
 
 const Index: React.FC = () => {
+  const [featuredPost, setFeaturedPost] = useState<Post | null>(null);
+  const [recentPosts, setRecentPosts] = useState<Post[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    fetchPosts();
+    fetchBooks();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch published posts
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        // Set first post as featured
+        setFeaturedPost(data[0]);
+        
+        // Set rest as recent posts (up to 3)
+        setRecentPosts(data.slice(1, 4));
+      }
+    } catch (error: any) {
+      console.error('Error fetching posts:', error.message);
+      toast({
+        title: "Error",
+        description: "Failed to load posts. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchBooks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('books')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(2);
+        
+      if (error) throw error;
+      
+      setBooks(data || []);
+    } catch (error: any) {
+      console.error('Error fetching books:', error.message);
+      toast({
+        title: "Error",
+        description: "Failed to load books. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Helper function to create excerpt from content
+  const formatExcerpt = (content: string): string => {
+    return content.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...';
+  };
+
+  // Format the date
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes('@')) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    toast({
+      title: "Subscribed!",
+      description: "Thank you for subscribing to our newsletter.",
+    });
+    
+    setEmail('');
+  };
+
   return (
     <Layout>
       {/* Featured Post */}
-      <FeaturedPost {...featuredPost} />
+      {isLoading ? (
+        <div className="flex justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+        </div>
+      ) : featuredPost ? (
+        <FeaturedPost 
+          id={featuredPost.id}
+          title={featuredPost.title}
+          excerpt={formatExcerpt(featuredPost.content)}
+          date={formatDate(featuredPost.created_at)}
+          imageUrl={featuredPost.image_url || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=1600&h=800'}
+          category={featuredPost.category}
+        />
+      ) : (
+        <div className="text-center py-20">
+          <p className="text-lg text-gray-600 dark:text-gray-400">No featured posts available.</p>
+        </div>
+      )}
       
       {/* Recent Posts Section */}
       <motion.section 
@@ -76,10 +157,10 @@ const Index: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.3 }}
       >
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-serif font-bold">Recent Articles</h2>
+          <h2 className="text-2xl font-serif font-bold dark:text-white">Recent Articles</h2>
           <Link 
             to="/articles" 
-            className="flex items-center text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors"
+            className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-200 hover:text-gray-700 dark:hover:text-gray-400 transition-colors"
           >
             View all articles
             <ChevronRight size={16} className="ml-1" />
@@ -87,9 +168,23 @@ const Index: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recentPosts.map(post => (
-            <BlogCard key={post.id} {...post} />
-          ))}
+          {recentPosts.length > 0 ? (
+            recentPosts.map(post => (
+              <BlogCard 
+                key={post.id}
+                id={post.id}
+                title={post.title}
+                excerpt={formatExcerpt(post.content)}
+                date={formatDate(post.created_at)}
+                imageUrl={post.image_url || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&h=600'}
+                category={post.category}
+              />
+            ))
+          ) : (
+            <div className="col-span-3 text-center py-10">
+              <p className="text-gray-600 dark:text-gray-400">No recent articles available.</p>
+            </div>
+          )}
         </div>
       </motion.section>
       
@@ -101,10 +196,10 @@ const Index: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.5 }}
       >
         <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-serif font-bold">Book Recommendations</h2>
+          <h2 className="text-2xl font-serif font-bold dark:text-white">Book Recommendations</h2>
           <Link 
             to="/books" 
-            className="flex items-center text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors"
+            className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-200 hover:text-gray-700 dark:hover:text-gray-400 transition-colors"
           >
             View all books
             <ChevronRight size={16} className="ml-1" />
@@ -112,34 +207,52 @@ const Index: React.FC = () => {
         </div>
         
         <div className="space-y-6">
-          {recommendedBooks.map(book => (
-            <BookCard key={book.id} {...book} />
-          ))}
+          {books.length > 0 ? (
+            books.map(book => (
+              <BookCard 
+                key={book.id}
+                id={book.id}
+                title={book.title}
+                author={book.author}
+                summary={book.description || 'No description available.'}
+                imageUrl={book.cover_url}
+              />
+            ))
+          ) : (
+            <div className="text-center py-10">
+              <p className="text-gray-600 dark:text-gray-400">No book recommendations available.</p>
+            </div>
+          )}
         </div>
       </motion.section>
       
       {/* Newsletter Subscription */}
       <motion.section 
-        className="bg-gray-50 rounded-xl p-8 text-center"
+        className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 text-center"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-2xl font-serif font-bold mb-3">Stay Updated</h2>
-        <p className="text-gray-600 mb-6 max-w-xl mx-auto">
+        <h2 className="text-2xl font-serif font-bold mb-3 dark:text-white">Stay Updated</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-6 max-w-xl mx-auto">
           Subscribe to receive the latest articles, book recommendations, and insights directly in your inbox.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+        <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <input 
             type="email" 
             placeholder="Your email address" 
-            className="flex-grow px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="flex-grow px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-500"
           />
-          <button className="bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors">
+          <button 
+            type="submit"
+            className="bg-gray-900 dark:bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+          >
             Subscribe
           </button>
-        </div>
+        </form>
       </motion.section>
     </Layout>
   );

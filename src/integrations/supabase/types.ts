@@ -66,9 +66,31 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           author_id: string
+          category: string
           content: string
           created_at: string
           id: string
@@ -79,6 +101,7 @@ export type Database = {
         }
         Insert: {
           author_id: string
+          category: string
           content: string
           created_at?: string
           id?: string
@@ -89,6 +112,7 @@ export type Database = {
         }
         Update: {
           author_id?: string
+          category?: string
           content?: string
           created_at?: string
           id?: string
