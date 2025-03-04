@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import PostPage from "./pages/PostPage";
 import BooksPage from "./pages/BooksPage";
+import BookPage from "./pages/BookPage";
 import ArticlesPage from "./pages/ArticlesPage";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -28,6 +29,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/post/:id" element={<PostPage />} />
+              <Route path="/book/:id" element={<BookPage />} />
               <Route path="/articles" element={<ArticlesPage />} />
               <Route path="/books" element={<BooksPage />} />
               <Route path="/admin/login" element={<AdminLogin />} />

@@ -30,9 +30,12 @@ const ArticlesPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   useEffect(() => {
-    fetchPosts();
     fetchCategories();
-  }, [selectedCategory]); // Add selectedCategory dependency to trigger fetch when it changes
+  }, []);
+  
+  useEffect(() => {
+    fetchPosts();
+  }, [selectedCategory]);
   
   const fetchPosts = async () => {
     try {
@@ -117,7 +120,7 @@ const ArticlesPage: React.FC = () => {
             onClick={() => filterByCategory(null)}
             className={`px-3 py-1 text-sm rounded-full ${
               selectedCategory === null 
-                ? 'bg-gray-900 text-white dark:bg-gray-700' 
+                ? 'bg-gray-900 text-white dark:bg-gray-700 dark:text-white' 
                 : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
             } transition-colors`}
           >
@@ -130,7 +133,7 @@ const ArticlesPage: React.FC = () => {
               onClick={() => filterByCategory(category.name)}
               className={`px-3 py-1 text-sm rounded-full ${
                 selectedCategory === category.name 
-                  ? 'bg-gray-900 text-white dark:bg-gray-700' 
+                  ? 'bg-gray-900 text-white dark:bg-gray-700 dark:text-white' 
                   : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
               } transition-colors`}
             >
