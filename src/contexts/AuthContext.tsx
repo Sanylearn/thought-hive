@@ -68,11 +68,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) {
+        console.error('Error fetching profile:', error.message);
         throw error;
       }
 
       if (data) {
-        console.log("Profile fetched successfully:", data.role);
+        console.log("Profile fetched successfully:", data);
+        console.log("User role:", data.role);
         setProfile(data as UserProfile);
       } else {
         console.log("No profile found for this user");
@@ -88,6 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       console.log(`Attempting to sign in user: ${email}`);
+      
+      // First attempt to sign in with the provided credentials
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -101,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user) {
         console.log("User signed in successfully:", data.user.email);
         
-        // Fetch the profile to check role
+        // Fetch the profile to check role after successful sign in
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -110,7 +114,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         if (profileError) {
           console.error("Error fetching profile after login:", profileError);
-        } else if (profileData && profileData.role !== 'admin') {
+          // Sign out if we can't verify admin status
+          await supabase.auth.signOut();
+          throw new Error("Could not verify user role. Please try again.");
+        } 
+        
+        console.log("Profile data:", profileData);
+        
+        if (!profileData) {
+          console.log("No profile found for this user");
+          await supabase.auth.signOut();
+          throw new Error("No user profile found. Please contact an administrator.");
+        }
+        
+        if (profileData.role !== 'admin') {
           // If not admin, sign them out
           console.log(`User role: ${profileData.role} - Not an admin, signing out`);
           await supabase.auth.signOut();

@@ -31,31 +31,10 @@ const AdminLogin: React.FC = () => {
     try {
       console.log(`Attempting to sign in with email: ${email}`);
       
-      // First check if the email exists in the profiles table with admin role
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', email)
-        .eq('role', 'admin')
-        .single();
-      
-      if (profileError || !profiles) {
-        console.log('Profile check error or no profile found:', profileError);
-        setErrorMsg('No admin account found with this email. Please check your credentials.');
-        toast({
-          title: "Login Failed",
-          description: "No admin account found with this email.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log('Admin profile found, attempting to sign in');
-      
-      // If profile exists with admin role, proceed with login
+      // Skip the profile check and directly attempt to sign in
+      // The signIn function in AuthContext will check if the user has admin role
       await signIn(email, password);
-      // Note: Navigation is handled in the signIn function in AuthContext
+      // Navigation is handled in the signIn function in AuthContext
     } catch (error: any) {
       console.error('Login error details:', error);
       setErrorMsg(error.message || 'An error occurred during login');
