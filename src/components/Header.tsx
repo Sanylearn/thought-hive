@@ -30,7 +30,7 @@ const Header: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="flex-shrink-0"
           >
-            <Link to="/" className="text-2xl font-serif font-bold tracking-tight dark:text-white">
+            <Link to="/" className="text-2xl font-serif font-bold tracking-tight text-gray-900 dark:text-white">
               Opinion Matters
             </Link>
           </motion.div>

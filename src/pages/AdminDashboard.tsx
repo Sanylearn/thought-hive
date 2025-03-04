@@ -10,9 +10,9 @@ import {
   BookOpen, 
   FileText, 
   Settings,
-  Image,
   Tag,
-  X
+  X,
+  Save
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -22,15 +22,20 @@ import { toast } from '@/components/ui/use-toast';
 interface Post {
   id: string;
   title: string;
+  content?: string;
   status: string;
   created_at: string;
   category: string;
+  image_url?: string;
 }
 
 interface Book {
   id: string;
   title: string;
   author: string;
+  description?: string;
+  cover_url?: string;
+  download_url?: string;
   created_at: string;
 }
 
@@ -54,6 +59,9 @@ const AdminDashboard: React.FC = () => {
   const [showAddPostForm, setShowAddPostForm] = useState(false);
   const [showAddBookForm, setShowAddBookForm] = useState(false);
   const [showAddCategoryForm, setShowAddCategoryForm] = useState(false);
+  const [showEditPostForm, setShowEditPostForm] = useState(false);
+  const [showEditBookForm, setShowEditBookForm] = useState(false);
+  const [showEditCategoryForm, setShowEditCategoryForm] = useState(false);
   
   // Form states
   const [newPost, setNewPost] = useState({
@@ -64,6 +72,16 @@ const AdminDashboard: React.FC = () => {
     category: 'Uncategorized'
   });
   
+  const [editPost, setEditPost] = useState<Post>({
+    id: '',
+    title: '',
+    content: '',
+    status: 'draft',
+    image_url: '',
+    category: 'Uncategorized',
+    created_at: ''
+  });
+  
   const [newBook, setNewBook] = useState({
     title: '',
     author: '',
@@ -72,9 +90,26 @@ const AdminDashboard: React.FC = () => {
     download_url: '#' // Default value
   });
   
+  const [editBook, setEditBook] = useState<Book>({
+    id: '',
+    title: '',
+    author: '',
+    description: '',
+    cover_url: '',
+    download_url: '',
+    created_at: ''
+  });
+  
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: ''
+  });
+  
+  const [editCategory, setEditCategory] = useState<Category>({
+    id: '',
+    name: '',
+    description: '',
+    created_at: ''
   });
   
   useEffect(() => {
@@ -85,11 +120,13 @@ const AdminDashboard: React.FC = () => {
     }
   }, [user]);
   
+  // --- FETCH FUNCTIONS ---
+  
   const fetchPosts = async () => {
     try {
       const { data, error } = await supabase
         .from('posts')
-        .select('id, title, status, created_at, category')
+        .select('id, title, status, created_at, category, content, image_url')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
@@ -111,7 +148,7 @@ const AdminDashboard: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('books')
-        .select('id, title, author, created_at')
+        .select('*')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
@@ -146,6 +183,8 @@ const AdminDashboard: React.FC = () => {
       });
     }
   };
+  
+  // --- ADD FUNCTIONS ---
   
   const handleAddPost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,6 +322,131 @@ const AdminDashboard: React.FC = () => {
     }
   };
   
+  // --- EDIT FUNCTIONS ---
+  
+  const handleEditPost = (post: Post) => {
+    setEditPost(post);
+    setShowEditPostForm(true);
+  };
+  
+  const handleEditBook = (book: Book) => {
+    setEditBook(book);
+    setShowEditBookForm(true);
+  };
+  
+  const handleEditCategory = (category: Category) => {
+    setEditCategory(category);
+    setShowEditCategoryForm(true);
+  };
+  
+  const saveEditedPost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({
+          title: editPost.title,
+          content: editPost.content,
+          status: editPost.status,
+          image_url: editPost.image_url,
+          category: editPost.category
+        })
+        .eq('id', editPost.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Post updated successfully",
+      });
+      
+      setShowEditPostForm(false);
+      fetchPosts(); // Refresh posts list
+      
+    } catch (error: any) {
+      console.error('Error updating post:', error.message);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const saveEditedBook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const { error } = await supabase
+        .from('books')
+        .update({
+          title: editBook.title,
+          author: editBook.author,
+          description: editBook.description,
+          cover_url: editBook.cover_url,
+          download_url: editBook.download_url
+        })
+        .eq('id', editBook.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Book updated successfully",
+      });
+      
+      setShowEditBookForm(false);
+      fetchBooks(); // Refresh books list
+      
+    } catch (error: any) {
+      console.error('Error updating book:', error.message);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const saveEditedCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      if (!editCategory.name.trim()) {
+        throw new Error("Category name is required");
+      }
+      
+      const { error } = await supabase
+        .from('categories')
+        .update({
+          name: editCategory.name.trim(),
+          description: editCategory.description
+        })
+        .eq('id', editCategory.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Category updated successfully",
+      });
+      
+      setShowEditCategoryForm(false);
+      fetchCategories(); // Refresh categories list
+      
+    } catch (error: any) {
+      console.error('Error updating category:', error.message);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // --- DELETE FUNCTIONS ---
+  
   const handleDeletePost = async (id: string) => {
     try {
       const { error } = await supabase
@@ -384,7 +548,7 @@ const AdminDashboard: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="font-serif font-bold text-lg dark:text-white">Opinion Matters Admin</div>
+            <div className="font-serif font-bold text-lg text-gray-900 dark:text-white">Opinion Matters Admin</div>
             <div className="flex items-center gap-4">
               <ThemeToggle />
               {profile && (
@@ -406,7 +570,7 @@ const AdminDashboard: React.FC = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
@@ -414,33 +578,25 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
             <div className="flex items-center mb-4">
               <FileText size={20} className="mr-2 text-blue-600 dark:text-blue-400" />
-              <h3 className="font-semibold dark:text-white">Total Posts</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Total Posts</h3>
             </div>
-            <p className="text-3xl font-bold dark:text-white">{posts.length}</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">{posts.length}</p>
           </div>
           
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
             <div className="flex items-center mb-4">
               <BookOpen size={20} className="mr-2 text-green-600 dark:text-green-400" />
-              <h3 className="font-semibold dark:text-white">Book Recommendations</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Book Recommendations</h3>
             </div>
-            <p className="text-3xl font-bold dark:text-white">{books.length}</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">{books.length}</p>
           </div>
           
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
             <div className="flex items-center mb-4">
               <Tag size={20} className="mr-2 text-yellow-600 dark:text-yellow-400" />
-              <h3 className="font-semibold dark:text-white">Categories</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Categories</h3>
             </div>
-            <p className="text-3xl font-bold dark:text-white">{categories.length}</p>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center mb-4">
-              <Image size={20} className="mr-2 text-purple-600 dark:text-purple-400" />
-              <h3 className="font-semibold dark:text-white">Media Files</h3>
-            </div>
-            <p className="text-3xl font-bold dark:text-white">24</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">{categories.length}</p>
           </div>
         </motion.div>
         
@@ -484,7 +640,7 @@ const AdminDashboard: React.FC = () => {
         {activeTab === 'posts' && (
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-serif font-bold dark:text-white">Posts</h2>
+              <h2 className="text-xl font-serif font-bold text-gray-900 dark:text-white">Posts</h2>
               <button 
                 onClick={() => setShowAddPostForm(true)}
                 className="flex items-center bg-gray-900 dark:bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
@@ -503,7 +659,7 @@ const AdminDashboard: React.FC = () => {
                 exit={{ opacity: 0, height: 0 }}
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium dark:text-white">Add New Post</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Add New Post</h3>
                   <button 
                     onClick={() => setShowAddPostForm(false)}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -608,6 +764,121 @@ const AdminDashboard: React.FC = () => {
               </motion.div>
             )}
             
+            {/* Edit Post Form */}
+            {showEditPostForm && (
+              <motion.div 
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Edit Post</h3>
+                  <button 
+                    onClick={() => setShowEditPostForm(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                
+                <form onSubmit={saveEditedPost} className="space-y-4">
+                  <div>
+                    <label htmlFor="editTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Title
+                    </label>
+                    <input
+                      id="editTitle"
+                      type="text"
+                      value={editPost.title}
+                      onChange={(e) => setEditPost({...editPost, title: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="editContent" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Content
+                    </label>
+                    <textarea
+                      id="editContent"
+                      value={editPost.content}
+                      onChange={(e) => setEditPost({...editPost, content: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      rows={5}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="editCategory" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Category
+                    </label>
+                    <select
+                      id="editCategory"
+                      value={editPost.category}
+                      onChange={(e) => setEditPost({...editPost, category: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      required
+                    >
+                      {categories.map(category => (
+                        <option key={category.id} value={category.name}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="editImageUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Image URL (optional)
+                    </label>
+                    <input
+                      id="editImageUrl"
+                      type="text"
+                      value={editPost.image_url || ''}
+                      onChange={(e) => setEditPost({...editPost, image_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="editStatus" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Status
+                    </label>
+                    <select
+                      id="editStatus"
+                      value={editPost.status}
+                      onChange={(e) => setEditPost({...editPost, status: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="draft">Draft</option>
+                      <option value="published">Published</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditPostForm(false)}
+                      className="px-4 py-2 mr-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex items-center px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      <Save size={16} className="mr-1" />
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+            
             <motion.div 
               className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
               initial={{ opacity: 0 }}
@@ -660,7 +931,10 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
+                            <button 
+                              onClick={() => handleEditPost(post)} 
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                            >
                               <Edit3 size={18} />
                             </button>
                             <button 
@@ -684,7 +958,7 @@ const AdminDashboard: React.FC = () => {
         {activeTab === 'books' && (
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-serif font-bold dark:text-white">Book Recommendations</h2>
+              <h2 className="text-xl font-serif font-bold text-gray-900 dark:text-white">Book Recommendations</h2>
               <button 
                 onClick={() => setShowAddBookForm(true)}
                 className="flex items-center bg-gray-900 dark:bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
@@ -703,7 +977,7 @@ const AdminDashboard: React.FC = () => {
                 exit={{ opacity: 0, height: 0 }}
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium dark:text-white">Add New Book</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Add New Book</h3>
                   <button 
                     onClick={() => setShowAddBookForm(false)}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -803,6 +1077,116 @@ const AdminDashboard: React.FC = () => {
               </motion.div>
             )}
             
+            {/* Edit Book Form */}
+            {showEditBookForm && (
+              <motion.div 
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Edit Book</h3>
+                  <button 
+                    onClick={() => setShowEditBookForm(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                
+                <form onSubmit={saveEditedBook} className="space-y-4">
+                  <div>
+                    <label htmlFor="editBookTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Title
+                    </label>
+                    <input
+                      id="editBookTitle"
+                      type="text"
+                      value={editBook.title}
+                      onChange={(e) => setEditBook({...editBook, title: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="editAuthor" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Author
+                    </label>
+                    <input
+                      id="editAuthor"
+                      type="text"
+                      value={editBook.author}
+                      onChange={(e) => setEditBook({...editBook, author: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="editDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      id="editDescription"
+                      value={editBook.description || ''}
+                      onChange={(e) => setEditBook({...editBook, description: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="editCoverUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Cover Image URL
+                    </label>
+                    <input
+                      id="editCoverUrl"
+                      type="text"
+                      value={editBook.cover_url || ''}
+                      onChange={(e) => setEditBook({...editBook, cover_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      placeholder="https://example.com/cover.jpg"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="editDownloadUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Download URL
+                    </label>
+                    <input
+                      id="editDownloadUrl"
+                      type="text"
+                      value={editBook.download_url || ''}
+                      onChange={(e) => setEditBook({...editBook, download_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      placeholder="https://example.com/book.pdf"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditBookForm(false)}
+                      className="px-4 py-2 mr-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex items-center px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      <Save size={16} className="mr-1" />
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+            
             <motion.div 
               className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
               initial={{ opacity: 0 }}
@@ -845,7 +1229,10 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
+                            <button 
+                              onClick={() => handleEditBook(book)} 
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                            >
                               <Edit3 size={18} />
                             </button>
                             <button 
@@ -869,7 +1256,7 @@ const AdminDashboard: React.FC = () => {
         {activeTab === 'categories' && (
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-serif font-bold dark:text-white">Categories</h2>
+              <h2 className="text-xl font-serif font-bold text-gray-900 dark:text-white">Categories</h2>
               <button 
                 onClick={() => setShowAddCategoryForm(true)}
                 className="flex items-center bg-gray-900 dark:bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
@@ -888,7 +1275,7 @@ const AdminDashboard: React.FC = () => {
                 exit={{ opacity: 0, height: 0 }}
               >
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium dark:text-white">Add New Category</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Add New Category</h3>
                   <button 
                     onClick={() => setShowAddCategoryForm(false)}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -944,6 +1331,72 @@ const AdminDashboard: React.FC = () => {
               </motion.div>
             )}
             
+            {/* Edit Category Form */}
+            {showEditCategoryForm && (
+              <motion.div 
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Edit Category</h3>
+                  <button 
+                    onClick={() => setShowEditCategoryForm(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                
+                <form onSubmit={saveEditedCategory} className="space-y-4">
+                  <div>
+                    <label htmlFor="editCategoryName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Name
+                    </label>
+                    <input
+                      id="editCategoryName"
+                      type="text"
+                      value={editCategory.name}
+                      onChange={(e) => setEditCategory({...editCategory, name: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="editCategoryDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Description (optional)
+                    </label>
+                    <textarea
+                      id="editCategoryDescription"
+                      value={editCategory.description || ''}
+                      onChange={(e) => setEditCategory({...editCategory, description: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditCategoryForm(false)}
+                      className="px-4 py-2 mr-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex items-center px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      <Save size={16} className="mr-1" />
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+            
             <motion.div 
               className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
               initial={{ opacity: 0 }}
@@ -986,7 +1439,10 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
-                            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
+                            <button 
+                              onClick={() => handleEditCategory(category)} 
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                            >
                               <Edit3 size={18} />
                             </button>
                             <button 

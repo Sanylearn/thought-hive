@@ -32,7 +32,7 @@ const ArticlesPage: React.FC = () => {
   useEffect(() => {
     fetchPosts();
     fetchCategories();
-  }, []);
+  }, [selectedCategory]); // Add selectedCategory dependency to trigger fetch when it changes
   
   const fetchPosts = async () => {
     try {
@@ -79,10 +79,6 @@ const ArticlesPage: React.FC = () => {
   
   const filterByCategory = (categoryName: string | null) => {
     setSelectedCategory(categoryName);
-    // Fetch posts when category changes
-    setTimeout(() => {
-      fetchPosts();
-    }, 100);
   };
   
   // Format the excerpt from content
@@ -108,7 +104,7 @@ const ArticlesPage: React.FC = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl md:text-4xl font-serif font-bold mb-8 dark:text-white">Articles</h1>
+        <h1 className="text-3xl md:text-4xl font-serif font-bold mb-8 text-gray-900 dark:text-white">Articles</h1>
         
         {/* Category filter */}
         <div className="mb-8 flex flex-wrap items-center gap-2">
