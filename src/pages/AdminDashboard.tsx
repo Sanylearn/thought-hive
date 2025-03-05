@@ -9,8 +9,8 @@ import { toast } from '@/components/ui/use-toast';
 import { Post, Book, Category } from '@/types/admin';
 import DashboardStats from '@/components/admin/DashboardStats';
 import TabNavigation from '@/components/admin/TabNavigation';
-import PostsSection from '@/components/admin/PostsSection';
-import BooksSection from '@/components/admin/BooksSection';
+import { PostsSection } from '@/components/admin/PostsSection';
+import { BooksSection } from '@/components/admin/BooksSection';
 import CategoriesSection from '@/components/admin/CategoriesSection';
 
 const AdminDashboard: React.FC = () => {
