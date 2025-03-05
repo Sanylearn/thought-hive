@@ -3,9 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
-import { ChevronLeft, BookOpen } from 'lucide-react';
+import { ChevronLeft, BookOpen, Share2, Copy, Twitter, Facebook } from 'lucide-react';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { parseMarkdown } from '@/utils/markdown';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Book {
   id: string;
@@ -14,6 +21,7 @@ interface Book {
   description: string | null;
   cover_url: string;
   download_url: string;
+  is_markdown?: boolean;
 }
 
 const BookPage: React.FC = () => {
@@ -50,6 +58,26 @@ const BookPage: React.FC = () => {
     }
   };
 
+  // Handle sharing
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast({
+      title: "Link copied",
+      description: "Link has been copied to your clipboard",
+    });
+  };
+
+  const handleShareToTwitter = () => {
+    const text = encodeURIComponent(`Check out this book: ${book?.title} by ${book?.author}`);
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+  };
+
+  const handleShareToFacebook = () => {
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -78,6 +106,11 @@ const BookPage: React.FC = () => {
     );
   }
 
+  // Determine content to display
+  const displayDescription = book.is_markdown && book.description
+    ? parseMarkdown(book.description)
+    : book.description;
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
@@ -104,17 +137,41 @@ const BookPage: React.FC = () => {
               />
             </div>
             
-            {book.download_url && (
-              <a 
-                href={book.download_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full mt-4 flex items-center justify-center gap-2 bg-gray-900 dark:bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
-              >
-                <BookOpen size={18} />
-                <span>Read Full Book</span>
-              </a>
-            )}
+            <div className="flex mt-4 space-x-2">
+              {book.download_url && (
+                <a 
+                  href={book.download_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 bg-gray-900 dark:bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <BookOpen size={18} />
+                  <span>Read Book</span>
+                </a>
+              )}
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center justify-center p-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
+                    <Share2 size={18} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 p-2">
+                  <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer">
+                    <Copy size={16} className="mr-2" />
+                    <span>Copy link</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShareToTwitter} className="cursor-pointer">
+                    <Twitter size={16} className="mr-2" />
+                    <span>Share on X</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShareToFacebook} className="cursor-pointer">
+                    <Facebook size={16} className="mr-2" />
+                    <span>Share on Facebook</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
           
           <div className="flex-1">
@@ -124,7 +181,10 @@ const BookPage: React.FC = () => {
             <div className="prose prose-gray dark:prose-invert max-w-none">
               <h2 className="text-xl font-semibold mb-4">Summary</h2>
               {book.description ? (
-                <div className="whitespace-pre-wrap">{book.description}</div>
+                <div 
+                  className="whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ __html: displayDescription || '' }}
+                />
               ) : (
                 <p className="text-gray-500 dark:text-gray-400 italic">No summary available for this book.</p>
               )}

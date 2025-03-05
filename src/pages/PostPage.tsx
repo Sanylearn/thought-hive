@@ -3,10 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
-import { Share2, Calendar, Clock, ChevronLeft } from 'lucide-react';
+import { Share2, Calendar, Clock, ChevronLeft, Copy, Facebook, Twitter, Link as LinkIcon } from 'lucide-react';
 import BlogCard from '../components/BlogCard';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { parseMarkdown } from '@/utils/markdown';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Post {
   id: string;
@@ -15,6 +22,7 @@ interface Post {
   image_url: string | null;
   created_at: string;
   category: string;
+  is_markdown?: boolean;
 }
 
 const PostPage: React.FC = () => {
@@ -22,6 +30,7 @@ const PostPage: React.FC = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showShareMenu, setShowShareMenu] = useState(false);
   
   useEffect(() => {
     if (id) {
@@ -95,6 +104,26 @@ const PostPage: React.FC = () => {
     return `${readTime} min read`;
   };
 
+  // Handle sharing
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast({
+      title: "Link copied",
+      description: "Link has been copied to your clipboard",
+    });
+  };
+
+  const handleShareToTwitter = () => {
+    const text = encodeURIComponent(`Check out this article: ${post?.title}`);
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+  };
+
+  const handleShareToFacebook = () => {
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -122,6 +151,11 @@ const PostPage: React.FC = () => {
       </Layout>
     );
   }
+
+  // Determine content to display
+  const displayContent = post.is_markdown && post.content
+    ? parseMarkdown(post.content)
+    : post.content;
 
   return (
     <Layout>
@@ -160,10 +194,28 @@ const PostPage: React.FC = () => {
           
           <div className="flex items-center gap-3 mb-8">
             <div className="ml-auto">
-              <button className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                <Share2 size={18} />
-                <span className="text-sm font-medium">Share</span>
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <Share2 size={18} />
+                    <span className="text-sm font-medium">Share</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 p-2">
+                  <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer">
+                    <Copy size={16} className="mr-2" />
+                    <span>Copy link</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShareToTwitter} className="cursor-pointer">
+                    <Twitter size={16} className="mr-2" />
+                    <span>Share on X</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShareToFacebook} className="cursor-pointer">
+                    <Facebook size={16} className="mr-2" />
+                    <span>Share on Facebook</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </motion.div>
@@ -184,7 +236,7 @@ const PostPage: React.FC = () => {
           
           <div 
             className="blog-content prose prose-gray dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: displayContent }}
           />
         </motion.div>
         
