@@ -47,8 +47,9 @@ const BooksSection: React.FC<BooksSectionProps> = ({
     e.preventDefault();
     
     try {
-      const { user } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session?.user) throw new Error("User not authenticated");
       
       const { data, error } = await supabase
         .from('books')
@@ -58,7 +59,7 @@ const BooksSection: React.FC<BooksSectionProps> = ({
           description: newBook.description,
           cover_url: newBook.cover_url,
           download_url: newBook.download_url || '#', // Ensure download_url is provided
-          created_by: user.id
+          created_by: session.user.id
         }])
         .select();
         

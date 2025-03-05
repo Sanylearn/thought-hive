@@ -49,8 +49,9 @@ const PostsSection: React.FC<PostsSectionProps> = ({
     e.preventDefault();
     
     try {
-      const { user } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session?.user) throw new Error("User not authenticated");
       
       const { data, error } = await supabase
         .from('posts')
@@ -60,7 +61,7 @@ const PostsSection: React.FC<PostsSectionProps> = ({
           status: newPost.status,
           image_url: newPost.image_url,
           category: newPost.category,
-          author_id: user.id
+          author_id: session.user.id
         }])
         .select();
         
