@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Post, Category } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,11 +20,10 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
     status: 'draft',
     image_url: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&h=600',
     category: categories[0]?.name || '',
-    is_markdown: false
   });
   const [editPost, setEditPost] = useState<Post | null>(null);
 
-  // When creating posts, include the is_markdown property
+  // When creating posts, remove the is_markdown property
   const handleAddPost = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -42,8 +40,7 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
           status: newPost.status,
           image_url: newPost.image_url,
           category: newPost.category,
-          author_id: session.user.id,
-          is_markdown: newPost.is_markdown || false
+          author_id: session.user.id
         }])
         .select();
         
@@ -61,7 +58,6 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
         status: 'draft',
         image_url: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&h=600',
         category: categories[0]?.name || '',
-        is_markdown: false
       });
       
       setShowAddPostForm(false);
@@ -90,8 +86,7 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
           content: editPost.content,
           status: editPost.status,
           image_url: editPost.image_url,
-          category: editPost.category,
-          is_markdown: editPost.is_markdown || false
+          category: editPost.category
         })
         .eq('id', editPost.id);
         
