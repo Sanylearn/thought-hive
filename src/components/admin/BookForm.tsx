@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { Book } from '@/types/admin';
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 interface BookFormProps {
   book: Book | {
@@ -11,7 +9,6 @@ interface BookFormProps {
     description: string;
     cover_url: string;
     download_url: string;
-    is_markdown?: boolean;
   };
   setBook: React.Dispatch<React.SetStateAction<any>>;
   onSubmit: (e: React.FormEvent) => Promise<void>;
@@ -69,17 +66,6 @@ const BookForm: React.FC<BookFormProps> = ({
           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
           rows={5}
         />
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Switch 
-          id="markdown-mode" 
-          checked={book.is_markdown || false}
-          onCheckedChange={(checked) => setBook({...book, is_markdown: checked})}
-        />
-        <Label htmlFor="markdown-mode" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Use Markdown for Description
-        </Label>
       </div>
       
       <div>

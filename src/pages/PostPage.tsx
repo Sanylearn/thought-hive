@@ -7,7 +7,6 @@ import { Share2, Calendar, Clock, ChevronLeft, Copy, Facebook, Twitter, Link as 
 import BlogCard from '../components/BlogCard';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
-import { parseMarkdown } from '@/utils/markdown';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +21,6 @@ interface Post {
   image_url: string | null;
   created_at: string;
   category: string;
-  is_markdown?: boolean;
 }
 
 const PostPage: React.FC = () => {
@@ -152,11 +150,6 @@ const PostPage: React.FC = () => {
     );
   }
 
-  // Determine content to display
-  const displayContent = post.is_markdown && post.content
-    ? parseMarkdown(post.content)
-    : post.content;
-
   return (
     <Layout>
       <article className="max-w-4xl mx-auto">
@@ -236,7 +229,7 @@ const PostPage: React.FC = () => {
           
           <div 
             className="blog-content prose prose-gray dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: displayContent }}
+            dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </motion.div>
         

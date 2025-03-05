@@ -2,8 +2,6 @@
 import React from 'react';
 import { Save } from 'lucide-react';
 import { Post, Category } from '@/types/admin';
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 interface PostFormProps {
   post: Post | {
@@ -12,7 +10,6 @@ interface PostFormProps {
     status: string;
     image_url: string;
     category: string;
-    is_markdown?: boolean;
   };
   setPost: React.Dispatch<React.SetStateAction<any>>;
   categories: Category[];
@@ -59,17 +56,6 @@ const PostForm: React.FC<PostFormProps> = ({
           rows={5}
           required
         />
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Switch 
-          id="markdown-mode" 
-          checked={post.is_markdown || false}
-          onCheckedChange={(checked) => setPost({...post, is_markdown: checked})}
-        />
-        <Label htmlFor="markdown-mode" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Use Markdown
-        </Label>
       </div>
       
       <div>

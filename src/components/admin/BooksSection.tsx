@@ -19,12 +19,10 @@ export const BooksSection: React.FC<BooksSectionProps> = ({ books, isLoading, fe
     author: '',
     description: '',
     cover_url: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&h=900',
-    download_url: '#',
-    is_markdown: false
+    download_url: '#'
   });
   const [editBook, setEditBook] = useState<Book | null>(null);
 
-  // When creating books, include the is_markdown property
   const handleAddBook = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -41,8 +39,7 @@ export const BooksSection: React.FC<BooksSectionProps> = ({ books, isLoading, fe
           description: newBook.description,
           cover_url: newBook.cover_url,
           download_url: newBook.download_url || '#', // Ensure download_url is provided
-          created_by: session.user.id,
-          is_markdown: newBook.is_markdown || false
+          created_by: session.user.id
         }])
         .select();
         
@@ -59,8 +56,7 @@ export const BooksSection: React.FC<BooksSectionProps> = ({ books, isLoading, fe
         author: '',
         description: '',
         cover_url: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&h=900',
-        download_url: '#',
-        is_markdown: false
+        download_url: '#'
       });
       
       setShowAddBookForm(false);
@@ -89,8 +85,7 @@ export const BooksSection: React.FC<BooksSectionProps> = ({ books, isLoading, fe
           author: editBook.author,
           description: editBook.description,
           cover_url: editBook.cover_url,
-          download_url: editBook.download_url,
-          is_markdown: editBook.is_markdown || false
+          download_url: editBook.download_url
         })
         .eq('id', editBook.id);
         

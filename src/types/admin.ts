@@ -7,7 +7,6 @@ export interface Post {
   created_at: string;
   category: string;
   image_url?: string;
-  is_markdown?: boolean;
 }
 
 export interface Book {
@@ -18,7 +17,6 @@ export interface Book {
   cover_url?: string;
   download_url?: string;
   created_at: string;
-  is_markdown?: boolean;
 }
 
 export interface Category {
