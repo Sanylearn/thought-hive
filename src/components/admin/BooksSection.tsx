@@ -207,7 +207,7 @@ export const BooksSection: React.FC<BooksSectionProps> = ({ books, isLoading, fe
           setBook={setNewBook as any}
           onSubmit={handleAddBook}
           onCancel={() => setShowAddBookForm(false)}
-          title="Add New Book"
+          submitButtonText="Add Book"
         />
       )}
       
@@ -217,7 +217,8 @@ export const BooksSection: React.FC<BooksSectionProps> = ({ books, isLoading, fe
           setBook={setEditBook as any}
           onSubmit={saveEditedBook}
           onCancel={() => setShowEditBookForm(false)}
-          title="Edit Book"
+          submitButtonText="Update Book"
+          isEdit={true}
         />
       )}
     </div>

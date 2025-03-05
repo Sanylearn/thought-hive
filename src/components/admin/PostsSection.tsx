@@ -221,7 +221,7 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
           categories={categories}
           onSubmit={handleAddPost}
           onCancel={() => setShowAddPostForm(false)}
-          title="Add New Post"
+          submitButtonText="Add Post"
         />
       )}
       
@@ -232,7 +232,8 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
           categories={categories}
           onSubmit={saveEditedPost}
           onCancel={() => setShowEditPostForm(false)}
-          title="Edit Post"
+          submitButtonText="Update Post"
+          isEdit={true}
         />
       )}
     </div>
