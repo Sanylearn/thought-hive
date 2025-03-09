@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -15,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Define Post interface without recursive types
 interface Post {
   id: string;
   title: string;
@@ -26,6 +26,8 @@ interface Post {
   meta_keywords?: string;
   slug?: string;
   author_id?: string;
+  status?: string;
+  updated_at?: string;
 }
 
 const PostPage: React.FC = () => {
