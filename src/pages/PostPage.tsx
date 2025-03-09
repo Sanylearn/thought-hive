@@ -14,7 +14,7 @@ import PostContent from '@/components/post/PostContent';
 import RelatedPosts from '@/components/post/RelatedPosts';
 import { formatExcerpt, formatDate, calculateReadTime } from '@/utils/post-utils';
 
-// Define a simple interface for related posts without circular references
+// Define a standalone interface for related posts to avoid circular references
 interface RelatedPost {
   id: string;
   title: string;
@@ -96,7 +96,7 @@ const PostPage: React.FC = () => {
   
   const fetchRelatedPosts = async (currentPost: Post) => {
     try {
-      // Explicitly select only the fields we need for RelatedPost interface
+      // Use type-safe field selection to avoid deep type instantiation
       const { data, error: relatedError } = await supabase
         .from('posts')
         .select('id, title, content, image_url, created_at, category')
@@ -108,8 +108,17 @@ const PostPage: React.FC = () => {
         
       if (relatedError) throw relatedError;
       
-      // Use type assertion here since we're selecting specific fields for RelatedPost interface
-      setRelatedPosts(data as RelatedPost[] || []);
+      // Convert the data to RelatedPost[] type explicitly
+      const typedRelatedPosts: RelatedPost[] = data ? data.map(item => ({
+        id: item.id,
+        title: item.title,
+        content: item.content,
+        image_url: item.image_url,
+        created_at: item.created_at,
+        category: item.category
+      })) : [];
+      
+      setRelatedPosts(typedRelatedPosts);
     } catch (error: any) {
       console.error('Error fetching related posts:', error.message);
     } finally {
