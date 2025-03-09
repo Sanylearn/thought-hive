@@ -117,5 +117,3 @@ orioledb_version = ""
 s3_host = ""
 # Configures S3 bucket region when using OrioleDB with S3
 s3_region = ""
-# Configures S3 bucket name when using OrioleDB with S3
-s3_bucket = ""

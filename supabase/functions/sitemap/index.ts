@@ -48,7 +48,7 @@ Sitemap: ${baseUrl}/api/sitemap
       // Get all published posts
       const { data: posts, error: postsError } = await supabase
         .from('posts')
-        .select('id, slug, updated_at, created_at')
+        .select('id, updated_at, created_at')
         .eq('status', 'published');
         
       if (postsError) {
@@ -58,7 +58,7 @@ Sitemap: ${baseUrl}/api/sitemap
       // Get all book pages
       const { data: books, error: booksError } = await supabase
         .from('books')
-        .select('id, updated_at, created_at');
+        .select('id, created_at');
         
       if (booksError) {
         throw booksError;
@@ -73,7 +73,7 @@ Sitemap: ${baseUrl}/api/sitemap
       
       // Post pages
       const postPages: SitemapEntry[] = posts?.map(post => ({
-        url: `${baseUrl}/post/${post.slug || post.id}`,
+        url: `${baseUrl}/post/${post.id}`,
         lastmod: post.updated_at || post.created_at,
         priority: 0.7,
         changefreq: 'weekly'
@@ -82,7 +82,7 @@ Sitemap: ${baseUrl}/api/sitemap
       // Book pages
       const bookPages: SitemapEntry[] = books?.map(book => ({
         url: `${baseUrl}/book/${book.id}`,
-        lastmod: book.updated_at || book.created_at,
+        lastmod: book.created_at,
         priority: 0.6,
         changefreq: 'monthly'
       })) || [];

@@ -1,3 +1,4 @@
+
 export interface Category {
   id: string;
   name: string;
@@ -18,4 +19,15 @@ export interface Post {
   meta_description?: string;
   meta_keywords?: string;
   slug?: string;
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  description: string | null;
+  cover_url: string;
+  download_url: string;
+  created_at: string;
+  created_by?: string;
 }

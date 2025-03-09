@@ -36,7 +36,7 @@ const AdminDashboard: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('posts')
-        .select('id, title, status, created_at, category, content, image_url')
+        .select('*')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
