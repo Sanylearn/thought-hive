@@ -1,50 +1,50 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import PostPage from "./pages/PostPage";
-import BooksPage from "./pages/BooksPage";
-import BookPage from "./pages/BookPage";
-import ArticlesPage from "./pages/ArticlesPage";
-import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { Toaster } from './components/ui/toaster';
+import Index from './pages/Index';
+import ArticlesPage from './pages/ArticlesPage';
+import PostPage from './pages/PostPage';
+import BooksPage from './pages/BooksPage';
+import BookPage from './pages/BookPage';
+import NotFound from './pages/NotFound';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
+import './App.css';
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <ThemeProvider>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
+function App() {
+  return (
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/post/:id" element={<PostPage />} />
-              <Route path="/book/:id" element={<BookPage />} />
               <Route path="/articles" element={<ArticlesPage />} />
+              <Route path="/post/:id" element={<PostPage />} />
+              <Route path="/post/slug/:slug" element={<PostPage />} />
               <Route path="/books" element={<BooksPage />} />
+              <Route path="/book/:id" element={<BookPage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
+              <Route
+                path="/admin/dashboard/*"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </AuthProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+            <Toaster />
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
+  );
+}
 
 export default App;

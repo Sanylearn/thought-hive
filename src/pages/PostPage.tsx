@@ -7,6 +7,7 @@ import { Share2, Calendar, Clock, ChevronLeft, Copy, Facebook, Twitter, Link as 
 import BlogCard from '../components/BlogCard';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import MetaTags from '@/components/SEO/MetaTags';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,22 +22,27 @@ interface Post {
   image_url: string | null;
   created_at: string;
   category: string;
+  meta_description?: string;
+  meta_keywords?: string;
+  slug?: string;
+  author_id?: string;
 }
 
 const PostPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, slug } = useParams<{ id?: string; slug?: string }>();
   const [post, setPost] = useState<Post | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showShareMenu, setShowShareMenu] = useState(false);
   
   useEffect(() => {
     if (id) {
-      fetchPost(id);
+      fetchPostById(id);
+    } else if (slug) {
+      fetchPostBySlug(slug);
     }
-  }, [id]);
+  }, [id, slug]);
   
-  const fetchPost = async (postId: string) => {
+  const fetchPostById = async (postId: string) => {
     try {
       setIsLoading(true);
       
@@ -52,27 +58,64 @@ const PostPage: React.FC = () => {
       
       if (postData) {
         setPost(postData);
-        
-        // Fetch related posts in the same category
-        const { data: relatedData, error: relatedError } = await supabase
-          .from('posts')
-          .select('*')
-          .eq('status', 'published')
-          .eq('category', postData.category)
-          .neq('id', postId)
-          .order('created_at', { ascending: false })
-          .limit(3);
-          
-        if (relatedError) throw relatedError;
-        setRelatedPosts(relatedData || []);
+        fetchRelatedPosts(postData);
       }
     } catch (error: any) {
-      console.error('Error fetching post:', error.message);
+      console.error('Error fetching post by ID:', error.message);
       toast({
         title: "Error",
         description: "Failed to load article. Please try again.",
         variant: "destructive",
       });
+      setIsLoading(false);
+    }
+  };
+  
+  const fetchPostBySlug = async (postSlug: string) => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch the post by slug
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('slug', postSlug)
+        .eq('status', 'published')
+        .single();
+        
+      if (postError) throw postError;
+      
+      if (postData) {
+        setPost(postData);
+        fetchRelatedPosts(postData);
+      }
+    } catch (error: any) {
+      console.error('Error fetching post by slug:', error.message);
+      toast({
+        title: "Error",
+        description: "Failed to load article. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+  
+  const fetchRelatedPosts = async (currentPost: Post) => {
+    try {
+      // Fetch related posts in the same category
+      const { data: relatedData, error: relatedError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('status', 'published')
+        .eq('category', currentPost.category)
+        .neq('id', currentPost.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+        
+      if (relatedError) throw relatedError;
+      setRelatedPosts(relatedData || []);
+    } catch (error: any) {
+      console.error('Error fetching related posts:', error.message);
     } finally {
       setIsLoading(false);
     }
@@ -152,6 +195,17 @@ const PostPage: React.FC = () => {
 
   return (
     <Layout>
+      {/* SEO Metadata */}
+      <MetaTags
+        title={post.title}
+        description={post.meta_description || formatExcerpt(post.content)}
+        keywords={post.meta_keywords || post.category}
+        imageUrl={post.image_url || undefined}
+        type="article"
+        publishedTime={post.created_at}
+        category={post.category}
+      />
+      
       <article className="max-w-4xl mx-auto">
         <Link 
           to="/articles"

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Post, Category } from '@/types/admin';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,10 +21,12 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
     status: 'draft',
     image_url: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&h=600',
     category: categories[0]?.name || '',
+    meta_description: '',
+    meta_keywords: '',
+    slug: '',
   });
   const [editPost, setEditPost] = useState<Post | null>(null);
 
-  // When creating posts, remove the is_markdown property
   const handleAddPost = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -40,7 +43,10 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
           status: newPost.status,
           image_url: newPost.image_url,
           category: newPost.category,
-          author_id: session.user.id
+          author_id: session.user.id,
+          meta_description: newPost.meta_description || null,
+          meta_keywords: newPost.meta_keywords || null,
+          slug: newPost.slug || null
         }])
         .select();
         
@@ -58,6 +64,9 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
         status: 'draft',
         image_url: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=800&h=600',
         category: categories[0]?.name || '',
+        meta_description: '',
+        meta_keywords: '',
+        slug: '',
       });
       
       setShowAddPostForm(false);
@@ -86,7 +95,10 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
           content: editPost.content,
           status: editPost.status,
           image_url: editPost.image_url,
-          category: editPost.category
+          category: editPost.category,
+          meta_description: editPost.meta_description || null,
+          meta_keywords: editPost.meta_keywords || null,
+          slug: editPost.slug || null
         })
         .eq('id', editPost.id);
         
@@ -175,7 +187,12 @@ export const PostsSection: React.FC<PostsSectionProps> = ({ posts, categories, i
               ) : (
                 posts.map((post) => (
                   <tr key={post.id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <td className="py-3 px-4">{post.title}</td>
+                    <td className="py-3 px-4">
+                      <div>
+                        {post.title}
+                        {post.slug && <div className="text-xs text-gray-500">/post/{post.slug}</div>}
+                      </div>
+                    </td>
                     <td className="py-3 px-4">
                       <span className={`inline-block px-2 py-1 rounded text-xs ${
                         post.status === 'published' 
