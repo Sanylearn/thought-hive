@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -14,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Define Post interface without recursive types
+// Define Post interface with explicit types to avoid circular references
 interface Post {
   id: string;
   title: string;
@@ -25,15 +26,25 @@ interface Post {
   meta_description?: string;
   meta_keywords?: string;
   slug?: string;
-  author_id?: string;
+  author_id: string;
   status?: string;
   updated_at?: string;
+}
+
+// Define a separate interface for related posts to avoid potential circularity
+interface RelatedPost {
+  id: string;
+  title: string;
+  content: string;
+  image_url: string | null;
+  created_at: string;
+  category: string;
 }
 
 const PostPage: React.FC = () => {
   const { id, slug } = useParams<{ id?: string; slug?: string }>();
   const [post, setPost] = useState<Post | null>(null);
-  const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
+  const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
