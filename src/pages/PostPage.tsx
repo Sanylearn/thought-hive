@@ -96,6 +96,7 @@ const PostPage: React.FC = () => {
   
   const fetchRelatedPosts = async (currentPost: Post) => {
     try {
+      // Explicitly select only the fields we need for RelatedPost interface
       const { data, error: relatedError } = await supabase
         .from('posts')
         .select('id, title, content, image_url, created_at, category')
@@ -107,6 +108,7 @@ const PostPage: React.FC = () => {
         
       if (relatedError) throw relatedError;
       
+      // Use type assertion here since we're selecting specific fields for RelatedPost interface
       setRelatedPosts(data as RelatedPost[] || []);
     } catch (error: any) {
       console.error('Error fetching related posts:', error.message);
