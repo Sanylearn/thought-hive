@@ -13,9 +13,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+// Import Post type from admin.ts to avoid circular references
 import { Post } from '@/types/admin';
 
 // Define a simple interface for related posts without circular references
+// This avoids the deep type instantiation issue
 interface RelatedPost {
   id: string;
   title: string;
@@ -99,8 +101,8 @@ const PostPage: React.FC = () => {
   
   const fetchRelatedPosts = async (currentPost: Post) => {
     try {
-      // Fetch related posts in the same category
-      const { data: relatedData, error: relatedError } = await supabase
+      // Only select fields we need for RelatedPost to avoid type issues
+      const { data, error: relatedError } = await supabase
         .from('posts')
         .select('id, title, content, image_url, created_at, category')
         .eq('status', 'published')
@@ -111,8 +113,8 @@ const PostPage: React.FC = () => {
         
       if (relatedError) throw relatedError;
       
-      // Cast the data to RelatedPost[] to ensure type safety
-      setRelatedPosts(relatedData as RelatedPost[] || []);
+      // Explicitly type the data as RelatedPost[]
+      setRelatedPosts((data || []) as RelatedPost[]);
     } catch (error: any) {
       console.error('Error fetching related posts:', error.message);
     } finally {
