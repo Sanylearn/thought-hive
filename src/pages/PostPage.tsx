@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
-import { Share2, Calendar, Clock, ChevronLeft, Copy, Facebook, Twitter, Link as LinkIcon } from 'lucide-react';
+import { Share2, Calendar, Clock, ChevronLeft, Copy, Facebook, Twitter } from 'lucide-react';
 import BlogCard from '../components/BlogCard';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -14,24 +13,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Post } from '@/types/admin';
 
-// Define Post interface with explicit types to avoid circular references
-interface Post {
-  id: string;
-  title: string;
-  content: string;
-  image_url: string | null;
-  created_at: string;
-  category: string;
-  meta_description?: string;
-  meta_keywords?: string;
-  slug?: string;
-  author_id: string;
-  status?: string;
-  updated_at?: string;
-}
-
-// Define a separate interface for related posts to avoid potential circularity
+// Define a simple interface for related posts without circular references
 interface RelatedPost {
   id: string;
   title: string;
@@ -118,7 +102,7 @@ const PostPage: React.FC = () => {
       // Fetch related posts in the same category
       const { data: relatedData, error: relatedError } = await supabase
         .from('posts')
-        .select('*')
+        .select('id, title, content, image_url, created_at, category')
         .eq('status', 'published')
         .eq('category', currentPost.category)
         .neq('id', currentPost.id)
@@ -126,7 +110,9 @@ const PostPage: React.FC = () => {
         .limit(3);
         
       if (relatedError) throw relatedError;
-      setRelatedPosts(relatedData || []);
+      
+      // Cast the data to RelatedPost[] to ensure type safety
+      setRelatedPosts(relatedData as RelatedPost[] || []);
     } catch (error: any) {
       console.error('Error fetching related posts:', error.message);
     } finally {
