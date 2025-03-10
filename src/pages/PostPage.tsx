@@ -11,6 +11,7 @@ import LoadingSpinner from '@/components/post/LoadingSpinner';
 import PostNotFound from '@/components/post/PostNotFound';
 import PostContent from '@/components/post/PostContent';
 import { formatExcerpt, formatDate, calculateReadTime } from '@/utils/post-utils';
+import { parseMarkdown } from '@/utils/markdown';
 
 const PostPage: React.FC = () => {
   const { id, slug } = useParams<{ id?: string; slug?: string }>();
@@ -18,24 +19,38 @@ const PostPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (id) {
-      fetchPostById(id);
-    } else if (slug) {
-      fetchPostBySlug(slug);
+    async function loadPost() {
+      if (id) {
+        await fetchPostById(id);
+      } else if (slug) {
+        await fetchPostBySlug(slug);
+      } else {
+        setIsLoading(false);
+      }
     }
+    
+    loadPost();
   }, [id, slug]);
   
   const fetchPostById = async (postId: string) => {
     try {
-      const { data: postData, error: postError } = await supabase
+      const { data, error } = await supabase
         .from('posts')
         .select('*')
         .eq('id', postId)
         .eq('status', 'published')
-        .single();
+        .maybeSingle();
         
-      if (postError) throw postError;
-      setPost(postData);
+      if (error) throw error;
+      
+      if (data) {
+        // Process the markdown content
+        const processedPost = {
+          ...data,
+          content: parseMarkdown(data.content)
+        };
+        setPost(processedPost);
+      }
     } catch (error: any) {
       console.error('Error fetching post by ID:', error.message);
       toast({
@@ -50,15 +65,23 @@ const PostPage: React.FC = () => {
   
   const fetchPostBySlug = async (postSlug: string) => {
     try {
-      const { data: postData, error: postError } = await supabase
+      const { data, error } = await supabase
         .from('posts')
         .select('*')
         .eq('slug', postSlug)
         .eq('status', 'published')
-        .single();
+        .maybeSingle();
         
-      if (postError) throw postError;
-      setPost(postData);
+      if (error) throw error;
+      
+      if (data) {
+        // Process the markdown content
+        const processedPost = {
+          ...data,
+          content: parseMarkdown(data.content)
+        };
+        setPost(processedPost);
+      }
     } catch (error: any) {
       console.error('Error fetching post by slug:', error.message);
       toast({

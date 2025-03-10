@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface PostMetaProps {
   date: string;
@@ -9,15 +9,13 @@ interface PostMetaProps {
 
 const PostMeta: React.FC<PostMetaProps> = ({ date, readTime }) => {
   return (
-    <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400 mb-6">
-      <div className="flex items-center gap-1">
-        <Calendar size={16} />
-        <span className="text-sm">{date}</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <Clock size={16} />
-        <span className="text-sm">{readTime}</span>
-      </div>
+    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <time dateTime={date}>{date}</time>
+      <span className="mx-2">•</span>
+      <span className="flex items-center">
+        <Clock size={14} className="mr-1" />
+        {readTime}
+      </span>
     </div>
   );
 };
