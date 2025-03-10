@@ -2,12 +2,7 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
 
-interface PostMetaProps {
-  date: string;
-  readTime: string;
-}
-
-const PostMeta: React.FC<PostMetaProps> = ({ date, readTime }) => {
+const PostMeta = ({ date, readTime }) => {
   return (
     <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
       <time dateTime={date}>{date}</time>

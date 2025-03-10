@@ -6,16 +6,15 @@ import { ChevronLeft } from 'lucide-react';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import MetaTags from '@/components/SEO/MetaTags';
-import { Post } from '@/types/admin';
 import LoadingSpinner from '@/components/post/LoadingSpinner';
 import PostNotFound from '@/components/post/PostNotFound';
 import PostContent from '@/components/post/PostContent';
 import { formatExcerpt, formatDate, calculateReadTime } from '@/utils/post-utils';
 import { parseMarkdown } from '@/utils/markdown';
 
-const PostPage: React.FC = () => {
-  const { id, slug } = useParams<{ id?: string; slug?: string }>();
-  const [post, setPost] = useState<Post | null>(null);
+const PostPage = () => {
+  const { id, slug } = useParams();
+  const [post, setPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -32,8 +31,9 @@ const PostPage: React.FC = () => {
     loadPost();
   }, [id, slug]);
   
-  const fetchPostById = async (postId: string) => {
+  const fetchPostById = async (postId) => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('posts')
         .select('*')
@@ -51,7 +51,7 @@ const PostPage: React.FC = () => {
         };
         setPost(processedPost);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching post by ID:', error.message);
       toast({
         title: "Error",
@@ -63,8 +63,9 @@ const PostPage: React.FC = () => {
     }
   };
   
-  const fetchPostBySlug = async (postSlug: string) => {
+  const fetchPostBySlug = async (postSlug) => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('posts')
         .select('*')
@@ -82,7 +83,7 @@ const PostPage: React.FC = () => {
         };
         setPost(processedPost);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching post by slug:', error.message);
       toast({
         title: "Error",
