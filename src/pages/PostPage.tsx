@@ -14,7 +14,7 @@ import PostContent from '@/components/post/PostContent';
 import RelatedPosts from '@/components/post/RelatedPosts';
 import { formatExcerpt, formatDate, calculateReadTime } from '@/utils/post-utils';
 
-// Define a completely separate interface for related posts
+// Define a completely separate interface with no relation to Post
 interface RelatedPost {
   id: string;
   title: string;
@@ -53,7 +53,8 @@ const PostPage: React.FC = () => {
       
       if (postData) {
         setPost(postData);
-        await fetchRelatedPosts(postData.category, postData.id);
+        // Call the function with primitive values instead of passing the post object
+        await getRelatedPostsData(postData.category, postData.id);
       }
     } catch (error: any) {
       console.error('Error fetching post by ID:', error.message);
@@ -81,7 +82,8 @@ const PostPage: React.FC = () => {
       
       if (postData) {
         setPost(postData);
-        await fetchRelatedPosts(postData.category, postData.id);
+        // Call the function with primitive values instead of passing the post object
+        await getRelatedPostsData(postData.category, postData.id);
       }
     } catch (error: any) {
       console.error('Error fetching post by slug:', error.message);
@@ -94,38 +96,34 @@ const PostPage: React.FC = () => {
     }
   };
   
-  // Completely refactored to avoid type issues
-  const fetchRelatedPosts = async (category: string, currentPostId: string) => {
+  // Renamed for clarity and simplified to avoid type recursion issues
+  const getRelatedPostsData = async (postCategory: string, postId: string) => {
     try {
-      // Use a raw query approach to avoid type inference issues
+      // Fetch only the fields we need
       const { data, error } = await supabase
         .from('posts')
         .select('id, title, content, image_url, created_at, category')
         .eq('status', 'published')
-        .eq('category', category)
-        .neq('id', currentPostId)
+        .eq('category', postCategory)
+        .neq('id', postId)
         .order('created_at', { ascending: false })
         .limit(3);
       
       if (error) throw error;
       
-      // Manually map the results to our RelatedPost interface
-      const relatedPostsData: RelatedPost[] = [];
+      // Type assertion to help TS understand the structure
+      const relatedPostsArray: RelatedPost[] = data ? 
+        data.map(item => ({
+          id: item.id,
+          title: item.title,
+          content: item.content,
+          image_url: item.image_url,
+          created_at: item.created_at,
+          category: item.category
+        })) : [];
       
-      if (data) {
-        for (const item of data) {
-          relatedPostsData.push({
-            id: item.id,
-            title: item.title,
-            content: item.content,
-            image_url: item.image_url,
-            created_at: item.created_at,
-            category: item.category
-          });
-        }
-      }
-      
-      setRelatedPosts(relatedPostsData);
+      // Use direct assignment with a type assertion
+      setRelatedPosts(relatedPostsArray);
     } catch (error: any) {
       console.error('Error fetching related posts:', error.message);
     } finally {
