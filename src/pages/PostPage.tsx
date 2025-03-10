@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { motion } from 'framer-motion';
 import { ChevronLeft } from 'lucide-react';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -11,23 +10,11 @@ import { Post } from '@/types/admin';
 import LoadingSpinner from '@/components/post/LoadingSpinner';
 import PostNotFound from '@/components/post/PostNotFound';
 import PostContent from '@/components/post/PostContent';
-import RelatedPosts from '@/components/post/RelatedPosts';
 import { formatExcerpt, formatDate, calculateReadTime } from '@/utils/post-utils';
-
-// Define a completely separate interface with no relation to Post
-interface RelatedPost {
-  id: string;
-  title: string;
-  content: string;
-  image_url: string | null;
-  created_at: string;
-  category: string;
-}
 
 const PostPage: React.FC = () => {
   const { id, slug } = useParams<{ id?: string; slug?: string }>();
   const [post, setPost] = useState<Post | null>(null);
-  const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -50,12 +37,7 @@ const PostPage: React.FC = () => {
         .single();
         
       if (postError) throw postError;
-      
-      if (postData) {
-        setPost(postData);
-        // Call the function with primitive values instead of passing the post object
-        await getRelatedPostsData(postData.category, postData.id);
-      }
+      setPost(postData);
     } catch (error: any) {
       console.error('Error fetching post by ID:', error.message);
       toast({
@@ -63,6 +45,7 @@ const PostPage: React.FC = () => {
         description: "Failed to load article. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -79,12 +62,7 @@ const PostPage: React.FC = () => {
         .single();
         
       if (postError) throw postError;
-      
-      if (postData) {
-        setPost(postData);
-        // Call the function with primitive values instead of passing the post object
-        await getRelatedPostsData(postData.category, postData.id);
-      }
+      setPost(postData);
     } catch (error: any) {
       console.error('Error fetching post by slug:', error.message);
       toast({
@@ -92,40 +70,6 @@ const PostPage: React.FC = () => {
         description: "Failed to load article. Please try again.",
         variant: "destructive",
       });
-      setIsLoading(false);
-    }
-  };
-  
-  // Renamed for clarity and simplified to avoid type recursion issues
-  const getRelatedPostsData = async (postCategory: string, postId: string) => {
-    try {
-      // Fetch only the fields we need
-      const { data, error } = await supabase
-        .from('posts')
-        .select('id, title, content, image_url, created_at, category')
-        .eq('status', 'published')
-        .eq('category', postCategory)
-        .neq('id', postId)
-        .order('created_at', { ascending: false })
-        .limit(3);
-      
-      if (error) throw error;
-      
-      // Type assertion to help TS understand the structure
-      const relatedPostsArray: RelatedPost[] = data ? 
-        data.map(item => ({
-          id: item.id,
-          title: item.title,
-          content: item.content,
-          image_url: item.image_url,
-          created_at: item.created_at,
-          category: item.category
-        })) : [];
-      
-      // Use direct assignment with a type assertion
-      setRelatedPosts(relatedPostsArray);
-    } catch (error: any) {
-      console.error('Error fetching related posts:', error.message);
     } finally {
       setIsLoading(false);
     }
@@ -149,7 +93,6 @@ const PostPage: React.FC = () => {
 
   return (
     <Layout>
-      {/* SEO Metadata */}
       <MetaTags
         title={post.title}
         description={post.meta_description || formatExcerpt(post.content)}
@@ -173,12 +116,6 @@ const PostPage: React.FC = () => {
           post={post} 
           formattedDate={formatDate(post.created_at)} 
           readTime={calculateReadTime(post.content)} 
-        />
-        
-        <RelatedPosts 
-          posts={relatedPosts} 
-          formatExcerpt={formatExcerpt} 
-          formatDate={formatDate} 
         />
       </article>
     </Layout>
