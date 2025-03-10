@@ -27,8 +27,6 @@ const PostPage: React.FC = () => {
   
   const fetchPostById = async (postId: string) => {
     try {
-      setIsLoading(true);
-      
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .select('*')
@@ -52,8 +50,6 @@ const PostPage: React.FC = () => {
   
   const fetchPostBySlug = async (postSlug: string) => {
     try {
-      setIsLoading(true);
-      
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .select('*')
