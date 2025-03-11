@@ -16,43 +16,63 @@ import type { Post } from '@/types/admin';
 const PostPage: React.FC = () => {
   const { id, slug } = useParams<{ id?: string; slug?: string }>();
   const [post, setPost] = useState<Post | null>(null);
+  const [authorName, setAuthorName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const loadPost = async () => {
       try {
         setIsLoading(true);
-        let data = null;
+        
+        let query = null;
         
         if (id) {
-          const response = await supabase
+          query = supabase
             .from('posts')
             .select('*')
             .eq('id', id)
             .eq('status', 'published')
             .limit(1);
-            
-          if (response.error) throw response.error;
-          data = response.data?.[0] || null;
         } 
         else if (slug) {
-          const response = await supabase
+          query = supabase
             .from('posts')
             .select('*')
             .eq('slug', slug)
             .eq('status', 'published')
             .limit(1);
-            
-          if (response.error) throw response.error;
-          data = response.data?.[0] || null;
         }
         
-        if (data) {
+        if (!query) {
+          setIsLoading(false);
+          return;
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          const postData = data[0];
           const processedPost = {
-            ...data,
-            content: parseMarkdown(data.content)
+            ...postData,
+            content: parseMarkdown(postData.content)
           };
+          
           setPost(processedPost);
+          
+          // Fetch author information if author_id exists
+          if (postData.author_id) {
+            const { data: authorData, error: authorError } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', postData.author_id)
+              .limit(1);
+              
+            if (!authorError && authorData && authorData.length > 0) {
+              setAuthorName(authorData[0].full_name);
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching post:', error);
@@ -109,7 +129,8 @@ const PostPage: React.FC = () => {
         <PostContent 
           post={post} 
           formattedDate={formatDate(post.created_at)} 
-          readTime={calculateReadTime(post.content)} 
+          readTime={calculateReadTime(post.content)}
+          author={authorName || undefined}
         />
       </article>
     </Layout>

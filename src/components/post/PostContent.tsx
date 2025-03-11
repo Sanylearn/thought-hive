@@ -9,9 +9,10 @@ interface PostContentProps {
   post: Post;
   formattedDate: string;
   readTime: string;
+  author?: string;
 }
 
-const PostContent: React.FC<PostContentProps> = ({ post, formattedDate, readTime }) => {
+const PostContent: React.FC<PostContentProps> = ({ post, formattedDate, readTime, author }) => {
   return (
     <>
       <motion.div
@@ -27,7 +28,7 @@ const PostContent: React.FC<PostContentProps> = ({ post, formattedDate, readTime
           {post.title}
         </h1>
         
-        <PostMeta date={formattedDate} readTime={readTime} />
+        <PostMeta date={formattedDate} readTime={readTime} author={author} />
         
         <div className="flex items-center gap-3 mb-8">
           <SharePost />
