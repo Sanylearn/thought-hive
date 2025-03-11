@@ -24,18 +24,23 @@ const PostPage: React.FC = () => {
       try {
         setIsLoading(true);
         
-        let query = null;
+        if (!id && !slug) {
+          setIsLoading(false);
+          return;
+        }
+        
+        let response;
         
         if (id) {
-          query = supabase
+          response = await supabase
             .from('posts')
             .select('*')
             .eq('id', id)
             .eq('status', 'published')
             .limit(1);
         } 
-        else if (slug) {
-          query = supabase
+        else {
+          response = await supabase
             .from('posts')
             .select('*')
             .eq('slug', slug)
@@ -43,12 +48,7 @@ const PostPage: React.FC = () => {
             .limit(1);
         }
         
-        if (!query) {
-          setIsLoading(false);
-          return;
-        }
-        
-        const { data, error } = await query;
+        const { data, error } = response;
         
         if (error) throw error;
         
