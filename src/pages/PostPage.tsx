@@ -11,10 +11,11 @@ import PostNotFound from '@/components/post/PostNotFound';
 import PostContent from '@/components/post/PostContent';
 import { formatExcerpt, formatDate, calculateReadTime } from '@/utils/post-utils';
 import { parseMarkdown } from '@/utils/markdown';
+import type { Post } from '@/types/admin';
 
 const PostPage = () => {
   const { id, slug } = useParams();
-  const [post, setPost] = useState(null);
+  const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -31,29 +32,29 @@ const PostPage = () => {
     loadPost();
   }, [id, slug]);
   
-  const fetchPostById = async (postId) => {
+  const fetchPostById = async (postId: string) => {
     try {
       setIsLoading(true);
       
-      // Use Supabase with simplified query approach
       const { data, error } = await supabase
         .from('posts')
-        .select()
+        .select('*')
         .eq('id', postId)
-        .eq('status', 'published');
+        .eq('status', 'published')
+        .limit(1)
+        .single();
       
       if (error) throw error;
       
-      if (data && data.length > 0) {
-        // Process the markdown content
+      if (data) {
         const processedPost = {
-          ...data[0],
-          content: parseMarkdown(data[0].content)
+          ...data,
+          content: parseMarkdown(data.content)
         };
         setPost(processedPost);
       }
     } catch (error) {
-      console.error('Error fetching post by ID:', error.message);
+      console.error('Error fetching post by ID:', error);
       toast({
         title: "Error",
         description: "Failed to load article. Please try again.",
@@ -64,29 +65,29 @@ const PostPage = () => {
     }
   };
   
-  const fetchPostBySlug = async (postSlug) => {
+  const fetchPostBySlug = async (postSlug: string) => {
     try {
       setIsLoading(true);
       
-      // Use Supabase with simplified query approach
       const { data, error } = await supabase
         .from('posts')
-        .select()
+        .select('*')
         .eq('slug', postSlug)
-        .eq('status', 'published');
+        .eq('status', 'published')
+        .limit(1)
+        .single();
       
       if (error) throw error;
       
-      if (data && data.length > 0) {
-        // Process the markdown content
+      if (data) {
         const processedPost = {
-          ...data[0],
-          content: parseMarkdown(data[0].content)
+          ...data,
+          content: parseMarkdown(data.content)
         };
         setPost(processedPost);
       }
     } catch (error) {
-      console.error('Error fetching post by slug:', error.message);
+      console.error('Error fetching post by slug:', error);
       toast({
         title: "Error",
         description: "Failed to load article. Please try again.",
@@ -116,13 +117,13 @@ const PostPage = () => {
   return (
     <Layout>
       <MetaTags
-        title={post.title}
-        description={post.meta_description || formatExcerpt(post.content)}
-        keywords={post.meta_keywords || post.category}
-        imageUrl={post.image_url || undefined}
+        title={post?.title || ''}
+        description={post?.meta_description || (post?.content ? formatExcerpt(post.content) : '')}
+        keywords={post?.meta_keywords || post?.category}
+        imageUrl={post?.image_url}
         type="article"
-        publishedTime={post.created_at}
-        category={post.category}
+        publishedTime={post?.created_at}
+        category={post?.category}
       />
       
       <article className="max-w-4xl mx-auto">
@@ -134,11 +135,11 @@ const PostPage = () => {
           Back to all articles
         </Link>
       
-        <PostContent 
+        {post && <PostContent 
           post={post} 
           formattedDate={formatDate(post.created_at)} 
           readTime={calculateReadTime(post.content)} 
-        />
+        />}
       </article>
     </Layout>
   );
