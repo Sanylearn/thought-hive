@@ -3,8 +3,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import PostMeta from './PostMeta';
 import SharePost from './SharePost';
+import type { Post } from '@/types/admin';
 
-const PostContent = ({ post, formattedDate, readTime }) => {
+interface PostContentProps {
+  post: Post;
+  formattedDate: string;
+  readTime: string;
+}
+
+const PostContent: React.FC<PostContentProps> = ({ post, formattedDate, readTime }) => {
   return (
     <>
       <motion.div

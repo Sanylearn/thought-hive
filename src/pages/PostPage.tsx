@@ -13,90 +13,61 @@ import { formatExcerpt, formatDate, calculateReadTime } from '@/utils/post-utils
 import { parseMarkdown } from '@/utils/markdown';
 import type { Post } from '@/types/admin';
 
-const PostPage = () => {
-  const { id, slug } = useParams();
+const PostPage: React.FC = () => {
+  const { id, slug } = useParams<{ id?: string; slug?: string }>();
   const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    async function loadPost() {
-      if (id) {
-        await fetchPostById(id);
-      } else if (slug) {
-        await fetchPostBySlug(slug);
-      } else {
+    const loadPost = async () => {
+      try {
+        setIsLoading(true);
+        let data = null;
+        
+        if (id) {
+          const response = await supabase
+            .from('posts')
+            .select('*')
+            .eq('id', id)
+            .eq('status', 'published')
+            .limit(1);
+            
+          if (response.error) throw response.error;
+          data = response.data?.[0] || null;
+        } 
+        else if (slug) {
+          const response = await supabase
+            .from('posts')
+            .select('*')
+            .eq('slug', slug)
+            .eq('status', 'published')
+            .limit(1);
+            
+          if (response.error) throw response.error;
+          data = response.data?.[0] || null;
+        }
+        
+        if (data) {
+          const processedPost = {
+            ...data,
+            content: parseMarkdown(data.content)
+          };
+          setPost(processedPost);
+        }
+      } catch (error) {
+        console.error('Error fetching post:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load article. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
         setIsLoading(false);
       }
-    }
+    };
     
     loadPost();
   }, [id, slug]);
-  
-  const fetchPostById = async (postId: string) => {
-    try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('id', postId)
-        .eq('status', 'published')
-        .limit(1)
-        .single();
-      
-      if (error) throw error;
-      
-      if (data) {
-        const processedPost = {
-          ...data,
-          content: parseMarkdown(data.content)
-        };
-        setPost(processedPost);
-      }
-    } catch (error) {
-      console.error('Error fetching post by ID:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load article. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const fetchPostBySlug = async (postSlug: string) => {
-    try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('slug', postSlug)
-        .eq('status', 'published')
-        .limit(1)
-        .single();
-      
-      if (error) throw error;
-      
-      if (data) {
-        const processedPost = {
-          ...data,
-          content: parseMarkdown(data.content)
-        };
-        setPost(processedPost);
-      }
-    } catch (error) {
-      console.error('Error fetching post by slug:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load article. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -117,13 +88,13 @@ const PostPage = () => {
   return (
     <Layout>
       <MetaTags
-        title={post?.title || ''}
-        description={post?.meta_description || (post?.content ? formatExcerpt(post.content) : '')}
-        keywords={post?.meta_keywords || post?.category}
-        imageUrl={post?.image_url}
+        title={post.title || ''}
+        description={post.meta_description || formatExcerpt(post.content)}
+        keywords={post.meta_keywords || post.category}
+        imageUrl={post.image_url}
         type="article"
-        publishedTime={post?.created_at}
-        category={post?.category}
+        publishedTime={post.created_at}
+        category={post.category}
       />
       
       <article className="max-w-4xl mx-auto">
@@ -135,11 +106,11 @@ const PostPage = () => {
           Back to all articles
         </Link>
       
-        {post && <PostContent 
+        <PostContent 
           post={post} 
           formattedDate={formatDate(post.created_at)} 
           readTime={calculateReadTime(post.content)} 
-        />}
+        />
       </article>
     </Layout>
   );
