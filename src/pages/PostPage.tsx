@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { ChevronLeft } from 'lucide-react';
+import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import MetaTags from '@/components/SEO/MetaTags';
 import LoadingSpinner from '@/components/post/LoadingSpinner';
@@ -34,19 +35,14 @@ const PostPage = () => {
     try {
       setIsLoading(true);
       
-      // Use simple fetch instead of Supabase client directly
-      const response = await fetch(`https://lafurncfvyrszfsfhkkf.supabase.co/rest/v1/posts?id=eq.${postId}&status=eq.published`, {
-        headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZnVybmNmdnlyc3pmc2Zoa2tmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5OTkwMjAsImV4cCI6MjA1NjU3NTAyMH0.VynVB7rt-QYbbLTH2k-0G64PWyPfgpFmf43gjCUA1ug',
-          'Content-Type': 'application/json'
-        }
-      });
+      // Use Supabase with simplified query approach
+      const { data, error } = await supabase
+        .from('posts')
+        .select()
+        .eq('id', postId)
+        .eq('status', 'published');
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch post');
-      }
-      
-      const data = await response.json();
+      if (error) throw error;
       
       if (data && data.length > 0) {
         // Process the markdown content
@@ -72,19 +68,14 @@ const PostPage = () => {
     try {
       setIsLoading(true);
       
-      // Use simple fetch instead of Supabase client directly
-      const response = await fetch(`https://lafurncfvyrszfsfhkkf.supabase.co/rest/v1/posts?slug=eq.${postSlug}&status=eq.published`, {
-        headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxhZnVybmNmdnlyc3pmc2Zoa2tmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5OTkwMjAsImV4cCI6MjA1NjU3NTAyMH0.VynVB7rt-QYbbLTH2k-0G64PWyPfgpFmf43gjCUA1ug',
-          'Content-Type': 'application/json'
-        }
-      });
+      // Use Supabase with simplified query approach
+      const { data, error } = await supabase
+        .from('posts')
+        .select()
+        .eq('slug', postSlug)
+        .eq('status', 'published');
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch post');
-      }
-      
-      const data = await response.json();
+      if (error) throw error;
       
       if (data && data.length > 0) {
         // Process the markdown content
