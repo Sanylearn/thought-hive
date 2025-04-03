@@ -138,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             title: "Successfully logged in",
             description: "Welcome back!",
           });
-          navigate('/admin');
+          navigate('/admin/dashboard');
         }
       }
     } catch (error: any) {

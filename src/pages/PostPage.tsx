@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -28,28 +29,17 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        let response;
-        
-        if (id) {
-          response = await supabase
-            .from('posts')
-            .select('*')
-            .eq('status', 'published')
-            .eq('id', id)
-            .limit(1);
-        } else if (slug) {
-          response = await supabase
-            .from('posts')
-            .select('*')
-            .eq('status', 'published')
-            .eq('slug', slug)
-            .limit(1);
-        } else {
-          setIsLoading(false);
-          return;
-        }
-        
-        const { data, error } = response;
+        let { data, error } = id 
+          ? await supabase.from('posts')
+              .select('*')
+              .eq('status', 'published')
+              .eq('id', id)
+              .limit(1)
+          : await supabase.from('posts')
+              .select('*')
+              .eq('status', 'published')
+              .eq('slug', slug)
+              .limit(1);
         
         if (error) throw error;
         
