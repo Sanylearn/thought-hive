@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -29,34 +28,27 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        let postData: Post | null = null;
-        
-        // Perform the appropriate query based on whether we have an id or slug
+        let query = supabase
+            .from('posts')
+            .select('*')
+            .eq('status', 'published')
+            .limit(1);
+            
+        // Apply the appropriate filter
         if (id) {
-          const { data, error } = await supabase
-            .from('posts')
-            .select('*')
-            .eq('id', id)
-            .eq('status', 'published')
-            .limit(1)
-            .single();
-            
-          if (error) throw error;
-          postData = data as Post;
-        } else {
-          const { data, error } = await supabase
-            .from('posts')
-            .select('*')
-            .eq('slug', slug)
-            .eq('status', 'published')
-            .limit(1)
-            .single();
-            
-          if (error) throw error;
-          postData = data as Post;
+          query = query.eq('id', id);
+        } else if (slug) {
+          query = query.eq('slug', slug);
         }
         
-        if (postData) {
+        const { data, error } = await query.single();
+            
+        if (error) throw error;
+        
+        if (data) {
+          // Explicitly type the data without direct casting
+          const postData: Post = data;
+          
           const processedPost = {
             ...postData,
             content: parseMarkdown(postData.content)
