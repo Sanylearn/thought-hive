@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -29,17 +28,12 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        let { data, error } = id 
-          ? await supabase.from('posts')
-              .select('*')
-              .eq('status', 'published')
-              .eq('id', id)
-              .limit(1)
-          : await supabase.from('posts')
-              .select('*')
-              .eq('status', 'published')
-              .eq('slug', slug)
-              .limit(1);
+        const response = await (id 
+          ? supabase.from('posts').select().eq('status', 'published').eq('id', id).limit(1)
+          : supabase.from('posts').select().eq('status', 'published').eq('slug', slug).limit(1)
+        );
+        
+        const { data, error } = response;
         
         if (error) throw error;
         
@@ -54,14 +48,14 @@ const PostPage: React.FC = () => {
           setPost(processedPost);
           
           if (postData.author_id) {
-            const { data: authorData, error: authorError } = await supabase
+            const authorResponse = await supabase
               .from('profiles')
               .select('full_name')
               .eq('id', postData.author_id)
               .single();
               
-            if (!authorError && authorData) {
-              setAuthorName(authorData.full_name);
+            if (!authorResponse.error && authorResponse.data) {
+              setAuthorName(authorResponse.data.full_name);
             }
           }
         }
