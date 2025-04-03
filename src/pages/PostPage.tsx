@@ -29,26 +29,33 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        let response;
+        // Define the explicit type for the response
+        type PostResponse = Awaited<ReturnType<typeof supabase.from<'posts'>>['select']>;
+        let data: Post[] = [];
+        let error = null;
         
+        // Perform the appropriate query based on whether we have an id or slug
         if (id) {
-          response = await supabase
+          const response = await supabase
             .from('posts')
             .select('*')
             .eq('id', id)
             .eq('status', 'published')
             .limit(1);
-        } 
-        else {
-          response = await supabase
+            
+          data = response.data as Post[];
+          error = response.error;
+        } else {
+          const response = await supabase
             .from('posts')
             .select('*')
             .eq('slug', slug)
             .eq('status', 'published')
             .limit(1);
+            
+          data = response.data as Post[];
+          error = response.error;
         }
-        
-        const { data, error } = response;
         
         if (error) throw error;
         
