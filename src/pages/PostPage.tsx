@@ -29,38 +29,34 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        // Define the explicit type for the response
-        type PostResponse = Awaited<ReturnType<typeof supabase.from<'posts'>>['select']>;
-        let data: Post[] = [];
-        let error = null;
+        let postData: Post | null = null;
         
         // Perform the appropriate query based on whether we have an id or slug
         if (id) {
-          const response = await supabase
+          const { data, error } = await supabase
             .from('posts')
             .select('*')
             .eq('id', id)
             .eq('status', 'published')
-            .limit(1);
+            .limit(1)
+            .single();
             
-          data = response.data as Post[];
-          error = response.error;
+          if (error) throw error;
+          postData = data as Post;
         } else {
-          const response = await supabase
+          const { data, error } = await supabase
             .from('posts')
             .select('*')
             .eq('slug', slug)
             .eq('status', 'published')
-            .limit(1);
+            .limit(1)
+            .single();
             
-          data = response.data as Post[];
-          error = response.error;
+          if (error) throw error;
+          postData = data as Post;
         }
         
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          const postData = data[0];
+        if (postData) {
           const processedPost = {
             ...postData,
             content: parseMarkdown(postData.content)
@@ -74,10 +70,10 @@ const PostPage: React.FC = () => {
               .from('profiles')
               .select('full_name')
               .eq('id', postData.author_id)
-              .limit(1);
+              .single();
               
-            if (!authorError && authorData && authorData.length > 0) {
-              setAuthorName(authorData[0].full_name);
+            if (!authorError && authorData) {
+              setAuthorName(authorData.full_name);
             }
           }
         }
