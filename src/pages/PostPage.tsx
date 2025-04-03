@@ -28,26 +28,33 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        let query = supabase
+        let response;
+        
+        if (id) {
+          response = await supabase
             .from('posts')
             .select('*')
             .eq('status', 'published')
+            .eq('id', id)
             .limit(1);
-            
-        // Apply the appropriate filter
-        if (id) {
-          query = query.eq('id', id);
         } else if (slug) {
-          query = query.eq('slug', slug);
+          response = await supabase
+            .from('posts')
+            .select('*')
+            .eq('status', 'published')
+            .eq('slug', slug)
+            .limit(1);
+        } else {
+          setIsLoading(false);
+          return;
         }
         
-        const { data, error } = await query.single();
-            
+        const { data, error } = response;
+        
         if (error) throw error;
         
-        if (data) {
-          // Explicitly type the data without direct casting
-          const postData: Post = data;
+        if (data && data.length > 0) {
+          const postData = data[0] as Post;
           
           const processedPost = {
             ...postData,
@@ -56,7 +63,6 @@ const PostPage: React.FC = () => {
           
           setPost(processedPost);
           
-          // Fetch author information if author_id exists
           if (postData.author_id) {
             const { data: authorData, error: authorError } = await supabase
               .from('profiles')
