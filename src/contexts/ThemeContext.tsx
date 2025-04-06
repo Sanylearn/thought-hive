@@ -2,10 +2,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Theme = 'light' | 'dark';
+type ReadingMode = boolean;
 
 interface ThemeContextProps {
   theme: Theme;
   toggleTheme: () => void;
+  readingMode: ReadingMode;
+  toggleReadingMode: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
@@ -20,25 +23,35 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const [theme, setTheme] = useState<Theme>(getSavedTheme);
+  const [readingMode, setReadingMode] = useState<ReadingMode>(
+    localStorage.getItem('readingMode') === 'true'
+  );
 
   useEffect(() => {
     // Apply the theme to the document element
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    document.documentElement.classList.remove('dark', 'light', 'reading-mode');
+    
+    document.documentElement.classList.add(theme);
+    
+    if (readingMode && theme === 'light') {
+      document.documentElement.classList.add('reading-mode');
     }
     
     // Save the theme preference to localStorage
     localStorage.setItem('theme', theme);
-  }, [theme]);
+    localStorage.setItem('readingMode', readingMode.toString());
+  }, [theme, readingMode]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
+  const toggleReadingMode = () => {
+    setReadingMode(prevMode => !prevMode);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, readingMode, toggleReadingMode }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 98%; /* Softer white instead of pure white */
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -66,6 +66,20 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
+  }
+
+  /* Reading mode styles - only applies in light mode */
+  .reading-mode {
+    --background: 40 30% 96%; /* Warm cream background */
+    --foreground: 25 10% 15%; /* Warmer text color */
+    
+    --card: 40 30% 98%;
+    --card-foreground: 25 10% 15%;
+    
+    --muted: 40 20% 92%;
+    --muted-foreground: 25 5% 45%;
+    
+    --border: 40 15% 85%;
   }
 
   * {
@@ -137,6 +151,17 @@
   
   .blog-content img {
     @apply my-6 rounded-lg mx-auto max-w-full h-auto;
+  }
+
+  /* Reading mode specific blog styling */
+  .reading-mode .blog-content {
+    @apply max-w-3xl mx-auto;
+    font-size: 1.125rem;
+    line-height: 1.8;
+  }
+
+  .reading-mode .blog-content p {
+    @apply my-6;
   }
   
   /* Admin styling */

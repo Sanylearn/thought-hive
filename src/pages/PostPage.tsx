@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, BookOpen } from 'lucide-react';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { useTheme } from '@/contexts/ThemeContext';
 import MetaTags from '@/components/SEO/MetaTags';
 import LoadingSpinner from '@/components/post/LoadingSpinner';
 import PostNotFound from '@/components/post/PostNotFound';
@@ -17,6 +19,7 @@ const PostPage: React.FC = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [authorName, setAuthorName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { theme, readingMode, toggleReadingMode } = useTheme();
   
   useEffect(() => {
     const loadPost = async () => {
@@ -90,6 +93,8 @@ const PostPage: React.FC = () => {
     );
   }
 
+  const showReadingModeToggle = theme === 'light';
+
   return (
     <Layout>
       <MetaTags
@@ -103,13 +108,29 @@ const PostPage: React.FC = () => {
       />
       
       <article className="max-w-4xl mx-auto">
-        <Link 
-          to="/articles"
-          className="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white mb-8"
-        >
-          <ChevronLeft size={16} className="mr-1" />
-          Back to all articles
-        </Link>
+        <div className="flex justify-between items-center mb-8">
+          <Link 
+            to="/articles"
+            className="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+          >
+            <ChevronLeft size={16} className="mr-1" />
+            Back to all articles
+          </Link>
+          
+          {showReadingModeToggle && (
+            <button
+              onClick={toggleReadingMode}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
+                readingMode 
+                  ? 'bg-amber-100 text-amber-800' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <BookOpen size={14} />
+              Reading Mode {readingMode ? 'On' : 'Off'}
+            </button>
+          )}
+        </div>
       
         <PostContent 
           post={post} 
