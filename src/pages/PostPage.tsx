@@ -31,12 +31,27 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        const response = await (id 
-          ? supabase.from('posts').select().eq('status', 'published').eq('id', id).limit(1)
-          : supabase.from('posts').select().eq('status', 'published').eq('slug', slug).limit(1)
-        );
+        let query;
         
-        const { data, error } = response;
+        // Create the query based on whether we're using id or slug
+        if (id) {
+          query = supabase
+            .from('posts')
+            .select('*')
+            .eq('status', 'published')
+            .eq('id', id)
+            .limit(1);
+        } else {
+          query = supabase
+            .from('posts')
+            .select('*')
+            .eq('status', 'published')
+            .eq('slug', slug)
+            .limit(1);
+        }
+        
+        // Execute the query
+        const { data, error } = await query;
         
         if (error) throw error;
         
@@ -51,14 +66,15 @@ const PostPage: React.FC = () => {
           setPost(processedPost);
           
           if (postData.author_id) {
-            const authorResponse = await supabase
+            // Fetch author information separately
+            const { data: authorData, error: authorError } = await supabase
               .from('profiles')
               .select('full_name')
               .eq('id', postData.author_id)
               .single();
               
-            if (!authorResponse.error && authorResponse.data) {
-              setAuthorName(authorResponse.data.full_name);
+            if (!authorError && authorData) {
+              setAuthorName(authorData.full_name);
             }
           }
         }
