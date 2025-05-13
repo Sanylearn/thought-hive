@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -31,27 +30,25 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        let query;
+        // Use explicit table typing and separate query construction
+        const table = supabase.from('posts');
+        let queryData;
         
-        // Create the query based on whether we're using id or slug
         if (id) {
-          query = supabase
-            .from('posts')
+          queryData = await table
             .select('*')
             .eq('status', 'published')
             .eq('id', id)
             .limit(1);
         } else {
-          query = supabase
-            .from('posts')
+          queryData = await table
             .select('*')
             .eq('status', 'published')
-            .eq('slug', slug)
+            .eq('slug', slug as string)
             .limit(1);
         }
         
-        // Execute the query
-        const { data, error } = await query;
+        const { data, error } = queryData;
         
         if (error) throw error;
         
@@ -67,8 +64,8 @@ const PostPage: React.FC = () => {
           
           if (postData.author_id) {
             // Fetch author information separately
-            const { data: authorData, error: authorError } = await supabase
-              .from('profiles')
+            const profilesTable = supabase.from('profiles');
+            const { data: authorData, error: authorError } = await profilesTable
               .select('full_name')
               .eq('id', postData.author_id)
               .single();
