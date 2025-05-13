@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -30,25 +31,30 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        // Use explicit table typing and separate query construction
-        const table = supabase.from('posts');
-        let queryData;
+        // Explicitly type our tables to avoid deep type instantiation
+        const postsTable = supabase.from('posts');
+        
+        // Create separate query objects for better type handling
+        let query;
         
         if (id) {
-          queryData = await table
+          // For id-based lookup
+          query = await postsTable
             .select('*')
             .eq('status', 'published')
             .eq('id', id)
             .limit(1);
         } else {
-          queryData = await table
+          // For slug-based lookup
+          query = await postsTable
             .select('*')
             .eq('status', 'published')
             .eq('slug', slug as string)
             .limit(1);
         }
         
-        const { data, error } = queryData;
+        // Handle the query result
+        const { data, error } = query;
         
         if (error) throw error;
         
