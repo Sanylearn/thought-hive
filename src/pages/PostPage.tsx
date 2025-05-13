@@ -31,26 +31,28 @@ const PostPage: React.FC = () => {
           return;
         }
         
-        // Explicitly type our tables to avoid deep type instantiation
-        const postsTable = supabase.from('posts');
-        
-        // Create separate query objects for better type handling
         let query;
         
         if (id) {
           // For id-based lookup
-          query = await postsTable
+          const { data, error } = await supabase
+            .from('posts')
             .select('*')
             .eq('status', 'published')
             .eq('id', id)
             .limit(1);
+            
+          query = { data, error };
         } else {
           // For slug-based lookup
-          query = await postsTable
+          const { data, error } = await supabase
+            .from('posts')
             .select('*')
             .eq('status', 'published')
             .eq('slug', slug as string)
             .limit(1);
+            
+          query = { data, error };
         }
         
         // Handle the query result
@@ -70,8 +72,8 @@ const PostPage: React.FC = () => {
           
           if (postData.author_id) {
             // Fetch author information separately
-            const profilesTable = supabase.from('profiles');
-            const { data: authorData, error: authorError } = await profilesTable
+            const { data: authorData, error: authorError } = await supabase
+              .from('profiles')
               .select('full_name')
               .eq('id', postData.author_id)
               .single();

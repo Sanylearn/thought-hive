@@ -95,6 +95,9 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          meta_description: string | null
+          meta_keywords: string | null
+          slug: string | null
           status: string
           title: string
           updated_at: string
@@ -106,6 +109,9 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          meta_description?: string | null
+          meta_keywords?: string | null
+          slug?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -117,6 +123,9 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          meta_description?: string | null
+          meta_keywords?: string | null
+          slug?: string | null
           status?: string
           title?: string
           updated_at?: string
