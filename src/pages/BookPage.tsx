@@ -7,6 +7,8 @@ import { ChevronLeft, BookOpen, Share2, Copy, Twitter, Facebook } from 'lucide-r
 import { supabase } from '../integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { parseMarkdown } from '@/utils/markdown';
+import BookReviewForm from '@/components/BookReviewForm';
+import BookReviews from '@/components/BookReviews';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +30,7 @@ const BookPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [book, setBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -56,6 +59,10 @@ const BookPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleReviewSubmitted = () => {
+    setReviewsRefreshTrigger(prev => prev + 1);
   };
 
   // Handle sharing
@@ -190,6 +197,24 @@ const BookPage: React.FC = () => {
               )}
             </div>
           </div>
+        </motion.div>
+
+        {/* Reviews Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="space-y-8"
+        >
+          <BookReviewForm 
+            bookId={book.id} 
+            onReviewSubmitted={handleReviewSubmitted} 
+          />
+          
+          <BookReviews 
+            bookId={book.id} 
+            refreshTrigger={reviewsRefreshTrigger} 
+          />
         </motion.div>
       </div>
     </Layout>
