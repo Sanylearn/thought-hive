@@ -7,9 +7,12 @@ import { toast } from '@/components/ui/use-toast';
 interface UserProfile {
   id: string;
   email: string;
-  role: string;
   avatar_url?: string;
   full_name?: string;
+}
+
+interface UserRole {
+  role: string;
 }
 
 interface AuthContextProps {
@@ -26,6 +29,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
@@ -61,21 +65,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   async function fetchProfile(userId: string) {
     try {
       console.log(`Fetching profile for user ID: ${userId}`);
-      const { data, error } = await supabase
+      
+      // Fetch profile
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error) {
-        console.error('Error fetching profile:', error.message);
-        throw error;
+      if (profileError) {
+        console.error('Error fetching profile:', profileError.message);
+        throw profileError;
       }
 
-      if (data) {
-        console.log("Profile fetched successfully:", data);
-        console.log("User role:", data.role);
-        setProfile(data as UserProfile);
+      // Fetch user roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError.message);
+      }
+
+      if (profileData) {
+        console.log("Profile fetched successfully:", profileData);
+        setProfile(profileData as UserProfile);
+        
+        const roles = rolesData?.map((r: UserRole) => r.role) || [];
+        console.log("User roles:", roles);
+        setUserRoles(roles);
       } else {
         console.log("No profile found for this user");
       }
@@ -105,41 +124,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user) {
         console.log("User signed in successfully:", data.user.email);
         
-        // Fetch the profile to check role after successful sign in
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+        // Fetch user roles to check admin status
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id);
           
-        if (profileError) {
-          console.error("Error fetching profile after login:", profileError);
-          // Sign out if we can't verify admin status
+        if (rolesError) {
+          console.error("Error fetching roles after login:", rolesError);
           await supabase.auth.signOut();
           throw new Error("Could not verify user role. Please try again.");
-        } 
-        
-        console.log("Profile data:", profileData);
-        
-        if (!profileData) {
-          console.log("No profile found for this user");
-          await supabase.auth.signOut();
-          throw new Error("No user profile found. Please contact an administrator.");
         }
         
-        if (profileData.role !== 'admin') {
-          // If not admin, sign them out
-          console.log(`User role: ${profileData.role} - Not an admin, signing out`);
+        const roles = rolesData?.map((r: UserRole) => r.role) || [];
+        console.log("User roles:", roles);
+        
+        if (!roles.includes('admin')) {
+          console.log("User is not an admin, signing out");
           await supabase.auth.signOut();
           throw new Error("Access denied. Only administrators can access this area.");
-        } else {
-          console.log("Admin access granted");
-          toast({
-            title: "Successfully logged in",
-            description: "Welcome back!",
-          });
-          navigate('/admin/dashboard');
         }
+        
+        console.log("Admin access granted");
+        toast({
+          title: "Successfully logged in",
+          description: "Welcome back!",
+        });
+        navigate('/admin/dashboard');
       }
     } catch (error: any) {
       console.error('Login error details:', error);
@@ -177,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = userRoles.includes('admin');
 
   return (
     <AuthContext.Provider
