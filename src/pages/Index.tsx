@@ -129,6 +129,40 @@ const Index: React.FC = () => {
 
   return (
     <Layout>
+      {/* Hero Section */}
+      <motion.section 
+        className="text-center py-20 mb-16"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <motion.h1 
+          className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          opinion matters
+        </motion.h1>
+        <motion.h2 
+          className="text-2xl md:text-3xl lg:text-4xl font-serif font-semibold mb-6 text-foreground"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          Where Opinions Shape Tomorrow
+        </motion.h2>
+        <motion.p 
+          className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          Dive into thought-provoking discussions on technology, culture, and
+          innovation. Your perspective matters in shaping the future.
+        </motion.p>
+      </motion.section>
+
       {/* Featured Post */}
       {isLoading ? (
         <div className="flex justify-center py-20">
