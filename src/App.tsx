@@ -9,6 +9,7 @@ import ArticlesPage from './pages/ArticlesPage';
 import PostPage from './pages/PostPage';
 import BooksPage from './pages/BooksPage';
 import BookPage from './pages/BookPage';
+import About from './pages/About';
 import NotFound from './pages/NotFound';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -28,6 +29,7 @@ function App() {
               <Route path="/post/slug/:slug" element={<PostPage />} />
               <Route path="/books" element={<BooksPage />} />
               <Route path="/book/:id" element={<BookPage />} />
+              <Route path="/about" element={<About />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route
                 path="/admin/dashboard/*"
